@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="2.5" type="plugin" group="content" method="upgrade">
+	<name>plg_noextlinks</name>
+	<author>Buyanov Danila</author>
+	<creationDate>Agust 2012</creationDate>
+	<copyright>Copyright (C) 2005 - 2012 Buyanov Danila. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+	<authorEmail>info@saity74.ru</authorEmail>
+	<authorUrl>www.saity74.ru</authorUrl>
+	<version>1.0</version>
+	<description>PLG_NOEXTLINKS_DESC</description>
+	<files>
+		<filename plugin="noextlinks">noextlinks.php</filename>
+		<filename>index.html</filename>
+	</files>
+        <languages folder="language">
+                <language tag="en-GB">en-GB/en-GB.plg_content_noextlinks.ini</language>
+                <language tag="en-GB">en-GB/en-GB.plg_content_noextlinks.sys.ini</language>
+                <language tag="ru-RU">ru-RU/ru-RU.plg_content_noextlinks.ini</language>
+                <language tag="ru-RU">ru-RU/ru-RU.plg_content_noextlinks.sys.ini</language>
+        </languages>
+        <config>
+	  <fields name="params">
+	    <fieldset name="basic">
+                <field name="noindex" type="radio"
+					default="1"
+					description="PLG_CONTENT_NOEXTLINKS_NOINDEX_DESC"
+					label="PLG_CONTENT_NOEXTLINKS_NOINDEX_LABEL"
+				>
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+				<field name="nofollow" type="radio"
+					default="1"
+					description="PLG_CONTENT_NOEXTLINKS_NOFOLLOW_DESC"
+					label="PLG_CONTENT_NOEXTLINKS_NOFOLLOW_LABEL"
+				>
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+				<field name="settitle" type="radio"
+					default="1"
+					description="PLG_CONTENT_NOEXTLINKS_SETTITLE_DESC"
+					label="PLG_CONTENT_NOEXTLINKS_SETTITLE_LABEL"
+				>
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+				<field name="blank" type="list"
+					default="_blank"
+					description="PLG_CONTENT_NOEXTLINKS_BLANK_DESC"
+					label="PLG_CONTENT_NOEXTLINKS_BLANK_LABEL"
+				>
+					<option value="0">JNO</option>
+					<option value="_blank">_blank</option>
+				</field>
+				<field name="whitelist" type="textarea"
+					label="PLG_CONTENT_NOEXTLINKS_WHITELIST_LABEL" description="PLG_CONTENT_NOEXTLINKS_WHITELIST_DESC"
+					class="inputbox" rows="3" cols="30" />
+            </fieldset>
+          </fields>
+        </config>
+</extension>
