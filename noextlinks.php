@@ -1,4 +1,16 @@
 <?php
+/*------------------------------------------------------------------------
+# plg_noextlinks
+# ------------------------------------------------------------------------
+# author &nbsp; &nbsp;Buyanov Danila - Saity74 Ltd.
+# copyright Copyright (C) 2012 saity74.ru. All Rights Reserved.
+# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
+# Websites: http://www.saity74.ru
+# Technical Support: &nbsp; http://saity74.ru/no-external-links-joomla.html
+# Admin E-mail: admin@saity74.ru
+-------------------------------------------------------------------------*/
+// no direct access
+defined( '_JEXEC' ) or die( 'Restricted access' ); 
 
 // No direct access
 defined('_JEXEC') or die;
