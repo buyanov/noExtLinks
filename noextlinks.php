@@ -25,11 +25,11 @@ class plgSystemNoExtLinks extends JPlugin
     public function onAfterRender()
 	{
 		$content = JResponse::getBody();
-		
-		
+
 		if (JString::strpos($content, '</a>') === false) {
 			return true;
 		}
+		
 		
 		$this->_addblank = $this->params->get('blank', '_blank') == '_blank';
 		$this->_addNoindex = $this->params->get('noindex', '1') == '1';
@@ -51,7 +51,6 @@ class plgSystemNoExtLinks extends JPlugin
 		$content = preg_replace_callback($regex, array(&$this, '_replace'), $content);
 		
 		JResponse::setBody($content);
-		
 		return true;
 	}
 	
@@ -61,9 +60,7 @@ class plgSystemNoExtLinks extends JPlugin
 
 		$args = JUtility::parseAttributes($matches[1]);
 		
-		
 		$parse = parse_url($args['href']);
-		
 		if (!$parse['host'])
 		{
 			$uri = JFactory::getURI();
