@@ -49,7 +49,13 @@ class plgContentNoExtLinks extends JPlugin
 		
 		
 		$parse = parse_url($args['href']);
-
+		
+		if (!$parse['host'])
+		{
+			$uri = JFactory::getURI();
+			$parse['host'] = $uri->getHost();
+		}
+		
 		if (!$this->_in_wl($parse['host']))
 		{
 			$params = '';
