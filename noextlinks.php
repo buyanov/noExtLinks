@@ -12,12 +12,9 @@
 // no direct access
 defined( '_JEXEC' ) or die( 'Restricted access' ); 
 
-// No direct access
-defined('_JEXEC') or die;
-
 jimport('joomla.plugin.plugin');
 
-class plgContentNoExtLinks extends JPlugin
+class plgSystemNoExtLinks extends JPlugin
 {
 	protected $_addblank;
 	protected $_addNoindex;
@@ -25,9 +22,12 @@ class plgContentNoExtLinks extends JPlugin
 	protected $_addTitle;
 	protected $_whitelist;
 
-    public function onContentPrepare($context, &$article, &$params, $page = 0)
+    public function onAfterRender()
 	{
-		if (JString::strpos($article->text, '</a>') === false) {
+		$content = JResponse::getBody();
+		
+		
+		if (JString::strpos($content, '</a>') === false) {
 			return true;
 		}
 		
@@ -48,7 +48,9 @@ class plgContentNoExtLinks extends JPlugin
 		
 		$regex = "#<a(.*?)>(.*?)</a>#s";
 
-		$article->text = preg_replace_callback($regex, array(&$this, '_replace'), $article->text);
+		$content = preg_replace_callback($regex, array(&$this, '_replace'), $content);
+		
+		JResponse::setBody($content);
 		
 		return true;
 	}
