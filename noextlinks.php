@@ -26,6 +26,39 @@ class plgSystemNoExtLinks extends JPlugin
 	{
 		$content = JResponse::getBody();
 
+		$app		= JFactory::getApplication();
+		$menu		= $app->getMenu();
+		$active_item  = $menu->getActive()->id;
+		
+		$items = explode(',', $this->params->get('excluded_menu_items'));
+		
+		if (is_array($items) && in_array($active_item, $items))
+			return true;
+			
+		$article_id = JRequest::getVar('id', 0);
+		$articles = explode(',', $this->params->get('excluded_articles'));
+
+		if (is_array($articles) && in_array($article_id, $articles))
+			return true;
+		
+		$categories = explode(',', $this->params->get('excluded_categories'));
+		
+		if (is_array($categories))
+		{
+			$db = JFactory::getDbo();
+			$query = $db->getQuery(true);
+			$query->select('catid');
+			$query->from('#__content');
+			$query->where('id = '.$article_id);
+			$category_id = $db->setQuery($query)->loadResult();
+			if (in_array($category_id, $categories))
+			{
+				return true;
+			}
+		}
+		
+		
+		
 		if (JString::strpos($content, '</a>') === false) {
 			return true;
 		}
