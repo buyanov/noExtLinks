@@ -25,10 +25,14 @@ class plgSystemNoExtLinks extends JPlugin
     public function onAfterRender()
 	{
 		$content = JResponse::getBody();
-
+		
+		if (JString::strpos($content, '</a>') === false) {
+			return true;
+		}
+		
 		$app		= JFactory::getApplication();
 		$menu		= $app->getMenu();
-		$active_item  = $menu->getActive()->id;
+		$active_item	= $menu->getActive()->id;
 		
 		$items = explode(',', $this->params->get('excluded_menu_items'));
 		
@@ -56,13 +60,6 @@ class plgSystemNoExtLinks extends JPlugin
 				return true;
 			}
 		}
-		
-		
-		
-		if (JString::strpos($content, '</a>') === false) {
-			return true;
-		}
-		
 		
 		$this->_addblank = $this->params->get('blank', '_blank') == '_blank';
 		$this->_addNoindex = $this->params->get('noindex', '1') == '1';
