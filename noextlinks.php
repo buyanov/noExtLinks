@@ -84,10 +84,12 @@ class plgSystemNoExtLinks extends JPlugin
 
 		$content = preg_replace_callback($regex, array(&$this, '_replace'), $content);
 		
-		$this->_blocks = array_reverse($this->_blocks);
-		
-		$regex = '#<!-- noExternalLinks-White-Block -->#s';
-		$content = preg_replace_callback($regex, array(&$this, '_includeBlocks'), $content);
+		if (is_array($this->_blocks) && !empty($this->_blocks))
+		{
+			$this->_blocks = array_reverse($this->_blocks);
+			$regex = '#<!-- noExternalLinks-White-Block -->#s';
+			$content = preg_replace_callback($regex, array(&$this, '_includeBlocks'), $content);
+		}
 		
 		JResponse::setBody($content);
 		return true;
