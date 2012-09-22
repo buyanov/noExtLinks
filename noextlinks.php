@@ -21,6 +21,7 @@ class plgSystemNoExtLinks extends JPlugin
 	protected $_addNofollow;
 	protected $_addTitle;
 	protected $_whitelist;
+	protected $_blocks;
 
     public function onAfterRender()
 	{
@@ -29,6 +30,9 @@ class plgSystemNoExtLinks extends JPlugin
 		if (JString::strpos($content, '</a>') === false) {
 			return true;
 		}
+		
+		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
+		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
 		
 		$app		= JFactory::getApplication();
 		$menu		= $app->getMenu();
@@ -79,6 +83,11 @@ class plgSystemNoExtLinks extends JPlugin
 		$regex = "#<a(.*?)>(.*?)</a>#s";
 
 		$content = preg_replace_callback($regex, array(&$this, '_replace'), $content);
+		
+		$this->_blocks = array_reverse($this->_blocks);
+		
+		$regex = '#<!-- noExternalLinks-White-Block -->#s';
+		$content = preg_replace_callback($regex, array(&$this, '_includeBlocks'), $content);
 		
 		JResponse::setBody($content);
 		return true;
@@ -131,6 +140,18 @@ class plgSystemNoExtLinks extends JPlugin
 			$text = $matches[0];
 			
 		return $text;
+	}
+	
+	protected function _excludeBlocks($matches)
+	{
+		$this->_blocks[] = $matches[1];
+		return '<!-- noExternalLinks-White-Block -->';
+	}
+	
+	protected function _includeBlocks($matches)
+	{
+		$block = array_pop($this->_blocks);
+		return '<!-- extlinks -->'.$block.'<!-- /extlinks -->';
 	}
 	
 	protected function _in_wl($host)
