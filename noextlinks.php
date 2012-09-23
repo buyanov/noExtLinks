@@ -31,25 +31,22 @@ class plgSystemNoExtLinks extends JPlugin
 			return true;
 		}
 		
-		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
-		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
-		
 		$app		= JFactory::getApplication();
 		$menu		= $app->getMenu();
 		$active_item	= $menu->getActive()->id;
 		
-		$items = explode(',', $this->params->get('excluded_menu_items'));
+		$items = explode(',', $this->params->get('excluded_menu_items', ''));
 		
 		if (is_array($items) && in_array($active_item, $items))
 			return true;
 			
 		$article_id = JRequest::getVar('id', 0);
-		$articles = explode(',', $this->params->get('excluded_articles'));
+		$articles = explode(',', $this->params->get('excluded_articles', ''));
 
 		if (is_array($articles) && in_array($article_id, $articles))
 			return true;
 		
-		$categories = explode(',', $this->params->get('excluded_categories'));
+		$categories = explode(',', $this->params->get('excluded_categories', ''));
 		
 		if (is_array($categories))
 		{
@@ -64,6 +61,9 @@ class plgSystemNoExtLinks extends JPlugin
 				return true;
 			}
 		}
+		
+		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
+		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
 		
 		$this->_addblank = $this->params->get('blank', '_blank') == '_blank';
 		$this->_addNoindex = $this->params->get('noindex', '1') == '1';
