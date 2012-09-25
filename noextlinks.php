@@ -118,7 +118,11 @@ class plgSystemNoExtLinks extends JPlugin
 				unset($args['nofollow']);
 			
 			if ($this->_addTitle && !$args['title'])
-				$args['title'] = $matches[2];
+			{
+				$title = trim(strip_tags($matches[2]));
+				if ($title)
+					$args['title'] = $title;
+			}
 			
 			
 			if ($this->_addblank)
