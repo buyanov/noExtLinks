@@ -47,8 +47,8 @@ class plgSystemNoExtLinks extends JPlugin
 			return true;
 		
 		$categories = explode(',', $this->params->get('excluded_categories', ''));
-		$categories = JArrayHelper::toInteger($categories, 'int');
-		if ($categories)
+		JArrayHelper::toInteger($categories);
+		if (count($categories) > 0)
 		{
 			$db = JFactory::getDbo();
 			$query = $db->getQuery(true);
