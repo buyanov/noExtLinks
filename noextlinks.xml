@@ -70,4 +70,7 @@
             </fieldset>
           </fields>
         </config>
+        <updateservers>
+		<server type="extension" name="No External Links">http://saity74.ru/noextlinks/extension.xml</server>
+	</updateservers>
 </extension>
