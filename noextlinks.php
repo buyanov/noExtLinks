@@ -1,6 +1,6 @@
 <?php
 /*------------------------------------------------------------------------
-# plg_noextlinks
+# plg_noextlinks   Fixes by Chris001 (github) of chris@espacenetworks.com
 # ------------------------------------------------------------------------
 # author &nbsp; &nbsp;Buyanov Danila - Saity74 Ltd.
 # copyright Copyright (C) 2012 saity74.ru. All Rights Reserved.
@@ -25,15 +25,15 @@ class plgSystemNoExtLinks extends JPlugin
 
     public function onAfterRender()
 	{
+		$app =& JFactory::getApplication(); if( $app->isAdmin() ) return true;	// Added by chris001.
 		$content = JResponse::getBody();
-		
 		if (JString::strpos($content, '</a>') === false) {
 			return true;
 		}
 		
 		$app		= JFactory::getApplication();
 		$menu		= $app->getMenu();
-		$active_item	= $menu->getActive()->id;
+		$active_item	= null;  if (isset($menu->getActive()->id)) $active_item = $menu->getActive()->id ; //Fixed by chris001.
 		
 		$items = explode(',', $this->params->get('excluded_menu_items', ''));
 		
@@ -103,13 +103,13 @@ class plgSystemNoExtLinks extends JPlugin
 		$args = JUtility::parseAttributes($matches[1]);
 		
 		$parse = parse_url($args['href']);
-		if (!$parse['host'])
+		if (isset($parse['host']) && (!$parse['host']))  //Fixed by chris001.
 		{
 			$uri = JFactory::getURI();
 			$parse['host'] = $uri->getHost();
 		}
 		
-		if (!$this->_in_wl($parse['host']))
+		if (isset($parse['host']) && !$this->_in_wl($parse['host']))  //Fixed by chris001.
 		{
 			$params = '';
 			
@@ -118,7 +118,7 @@ class plgSystemNoExtLinks extends JPlugin
 			else
 				unset($args['nofollow']);
 			
-			if ($this->_addTitle && !$args['title'])
+			if ($this->_addTitle && (isset($args['title'])) && !$args['title'])  //Fixed by chris001.
 			{
 				$title = trim(strip_tags($matches[2]));
 				if ($title)
