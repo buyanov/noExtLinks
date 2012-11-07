@@ -102,7 +102,7 @@ class plgSystemNoExtLinks extends JPlugin
 
 		$args = JUtility::parseAttributes($matches[1]);
 		
-		$parse = parse_url($args['href']);
+		$parse = isset($args['href']) ? parse_url($args['href']) : null ;	//fixed by chris001 6-nov-2012.
 		if (isset($parse['host']) && (!$parse['host']))  //Fixed by chris001.
 		{
 			$uri = JFactory::getURI();
