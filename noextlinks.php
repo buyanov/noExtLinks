@@ -22,9 +22,13 @@ class plgSystemNoExtLinks extends JPlugin
 	protected $_addTitle;
 	protected $_whitelist;
 	protected $_blocks;
+	protected $_usejs;
 
     public function onAfterRender()
 	{
+		$mootools_script = "<script type=\"text/javascript\">window.addEvent('domready', function(){ $$('span.external-link').each(function(el){ new Element('a').set({href : el.get('data-href'), target : el.get('data-target'),title : el.get('data-title')}).wraps(el)})})</script></body>"; 
+		$jquery_script = "<script type=\"text/javascript\">jQuery(document).ready(function(){jQuery('span.external-link').each(function(i, el){var data = jQuery(el).data(); jQuery(el).wrap(jQuery('<a/>').attr({'href' : data.href, 'title' : data.title, 'target' : data.target}))})})</script></body>"; 
+		
 		$app =& JFactory::getApplication(); if( $app->isAdmin() ) return true;	// Added by chris001.
 		$content = JResponse::getBody();
 		if (JString::strpos($content, '</a>') === false) {
@@ -43,7 +47,7 @@ class plgSystemNoExtLinks extends JPlugin
 		$article_id = JRequest::getVar('id', 0);
 		$articles = explode(',', $this->params->get('excluded_articles', ''));
 
-		if (is_array($articles) && in_array($article_id, $articles))
+		if (is_array($articles) && in_array($article_id, $articles, true))
 			return true;
 		
 		$categories = $this->params->get('excluded_categories', '');
@@ -70,6 +74,7 @@ class plgSystemNoExtLinks extends JPlugin
 		$this->_addNoindex = $this->params->get('noindex', '1') == '1';
 		$this->_addNofollow = $this->params->get('nofollow', '1') == '1';
 		$this->_addTitle = $this->params->get('settitle', '1') == '1';
+		$this->_usejs = $this->params->get('usejs', 0);
 		
 		$whitelist = $this->params->get('whitelist', '');
 		
@@ -90,6 +95,11 @@ class plgSystemNoExtLinks extends JPlugin
 			$this->_blocks = array_reverse($this->_blocks);
 			$regex = '#<!-- noExternalLinks-White-Block -->#s';
 			$content = preg_replace_callback($regex, array(&$this, '_includeBlocks'), $content);
+		}
+
+		switch ($this->_usejs){
+			case 1 : $content = preg_replace('#<\/body>#s', $mootools_script, $content); break;
+			case 2 : $content = preg_replace('#<\/body>#s', $jquery_script, $content); break;
 		}
 		
 		JResponse::setBody($content);
@@ -132,16 +142,24 @@ class plgSystemNoExtLinks extends JPlugin
 				unset($args['target']);
 			
 			
-				
+			$params = '';	
 			foreach ($args as $key => $value)
 			{
-				$params .= $key.'="'.$value.'" ';
+				$params .= ($this->_usejs ? 'data-' : '').$key.'="'.$value.'" ';
 			}
-			if ($this->_addNoindex)
-				$text = '<noindex><a '.$params.'>'.$matches[2].'</a></noindex>';
-			else
-				$text = '<a '.$params.'>'.$matches[2].'</a>';
-
+			
+			
+			if ($this->_usejs)
+			{
+				
+				$params .= 'class="external-link"';
+				$text = '<span '.$params.'>'.$matches[2].'</span>';
+			} else { 
+				if ($this->_addNoindex)
+					$text = '<noindex><a '.$params.'>'.$matches[2].'</a></noindex>';
+				else
+					$text = '<a '.$params.'>'.$matches[2].'</a>';
+			}
 		}
 		else
 			$text = $matches[0];
