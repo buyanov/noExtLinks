@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
 	<authorEmail>info@saity74.ru</authorEmail>
 	<authorUrl>www.saity74.ru</authorUrl>
-	<version>1.5.3</version>
+	<version>1.6</version>
 	<description>PLG_NOEXTLINKS_DESC</description>
 	<files>
 		<filename plugin="noextlinks">noextlinks.php</filename>
@@ -54,6 +54,17 @@
 					<option value="0">JNO</option>
 					<option value="_blank">_blank</option>
 				</field>
+				
+				<field name="usejs" type="list"
+					default="0"
+					description="PLG_SYSTEM_NOEXTLINKS_USEJS_DESC"
+					label="PLG_SYSTEM_NOEXTLINKS_USEJS_LABEL"
+				>
+					<option value="0">JNO</option>
+					<option value="1">MOOTOOLS</option>
+					<option value="2">JQUERY</option>
+				</field>
+				
 				<field name="whitelist" type="textarea"
 					label="PLG_SYSTEM_NOEXTLINKS_WHITELIST_LABEL" description="PLG_SYSTEM_NOEXTLINKS_WHITELIST_DESC"
 					class="inputbox" rows="3" cols="30" />
