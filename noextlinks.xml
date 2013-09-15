@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
 	<authorEmail>info@saity74.ru</authorEmail>
 	<authorUrl>www.saity74.ru</authorUrl>
-	<version>1.6.1</version>
+	<version>1.6.2</version>
 	<description>PLG_NOEXTLINKS_DESC</description>
 	<files>
 		<filename plugin="noextlinks">noextlinks.php</filename>
