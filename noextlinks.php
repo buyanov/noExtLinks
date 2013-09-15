@@ -184,7 +184,11 @@ class plgSystemNoExtLinks extends JPlugin
 		foreach ($this->_whitelist as $wh)
 		{
 			$find = trim(str_replace('*','',$wh));
-			if (stripos($host, $find) !== false)
+			if ($host === $wh)
+			{
+				return true;
+			
+			} elseif($find[0] === '.' && stripos($host, $find) !== false)
 			{
 				return true;
 			}
