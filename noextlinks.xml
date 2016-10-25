@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
 	<authorEmail>info@saity74.ru</authorEmail>
 	<authorUrl>www.saity74.ru</authorUrl>
-	<version>1.6.5</version>
+	<version>1.6.6</version>
 	<description>PLG_NOEXTLINKS_DESC</description>
 	<files>
 		<filename plugin="noextlinks">noextlinks.php</filename>
@@ -68,22 +68,43 @@
 					   label="PLG_SYSTEM_NOEXTLINKS_WHITELIST_LABEL" description="PLG_SYSTEM_NOEXTLINKS_WHITELIST_DESC"
 					   class="inputbox" rows="3" cols="30" />
 
-				<field name="excluded_menu_items" type="textarea"
-					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_LABEL" description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_DESC"
-					   class="inputbox" rows="2" cols="30" />
-				<field name="excluded_articles" type="textarea"
-					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_ARTICLES_LABEL" description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_ARTICLES_DESC"
-					   class="inputbox" rows="2" cols="30" />
 				<field
-						name="excluded_categories"
+						name="excluded_menu"
+						type="menuitem"
+						label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_LABEL"
+						description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_DESC"
+						multiple="true"
+						disable="separator,alias,heading,url"
+				/>
+
+				<field
+						name="excluded_category_list"
 						type="category"
 						label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_CATEGORIES_LABEL"
 						description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_CATEGORIES_DESC"
 						extension="com_content"
 						multiple="true"
-						size="10"
-				>
-				</field>
+				/>
+
+				<field name="excluded_articles" type="textarea"
+					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_ARTICLES_LABEL" description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_ARTICLES_DESC"
+					   class="inputbox" rows="2" cols="30" />
+			</fieldset>
+
+			<fieldset name="deprecated">
+				<field name="excluded_menu_items" type="textarea"
+					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_LABEL"
+					   description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_DESC"
+					   class="inputbox"
+					   rows="2"
+					   cols="30" />
+
+				<field name="excluded_categories" type="textarea"
+					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_CATEGORIES_LABEL"
+					   description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_CATEGORIES_DESC"
+					   class="inputbox"
+					   rows="2"
+					   cols="30" />
 			</fieldset>
 		</fields>
 	</config>

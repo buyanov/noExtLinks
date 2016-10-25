@@ -47,14 +47,23 @@ class plgSystemNoExtLinks extends JPlugin
 		$app	= JFactory::getApplication();
 		$menu	= $app->getMenu();
 		$active_item	= null;
+
 		if ($menu !== null && property_exists($menu->getActive(), 'id'))
 		{
 			$active_item = $menu->getActive()->id ; //Fixed by chris001.
 		}
 
-		$items = explode(',', $this->params->get('excluded_menu_items', ''));
+		$items = [];
+		$items_ids = $this->params->get('excluded_menu_items');
 
-		if (is_array($items) && in_array($active_item, $items))
+		if ($items_ids && strpos($items_ids, ',') !== false)
+		{
+			$items = ArrayHelper::toInteger(explode(',', $items_ids));
+		}
+
+		$items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
+
+		if ($active_item && !empty($items) && is_array($items) && in_array($active_item, $items))
 		{
 			return true;
 		}
@@ -67,12 +76,23 @@ class plgSystemNoExtLinks extends JPlugin
 			return true;
 		}
 
-		$categories = $this->params->get('excluded_categories');
+		$categories = [];
+		$categories_ids = $this->params->get('excluded_categories');
+
+		if ($categories_ids && strpos($categories_ids, ',') !== false)
+		{
+			$categories = ArrayHelper::toInteger(explode(',', $categories_ids));
+		}
+
+		$categories = array_merge($categories, ArrayHelper::toInteger($this->params->get('excluded_categories_list', [])));
 
 		if (!empty($categories))
 		{
 			if ($app->input->request->get('option') == 'com_content'
-				&& $app->input->request->get('view') == 'category'
+				&& (
+					$app->input->request->get('view') == 'category'
+					|| $app->input->request->get('view') == 'blog'
+				)
 				&& in_array($app->input->request->get('id'), $categories))
 			{
 				return true;
