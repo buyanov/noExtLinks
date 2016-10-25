@@ -13,6 +13,7 @@
 defined( '_JEXEC' ) or die( 'Restricted access' ); 
 
 use Joomla\Utilities\ArrayHelper;
+use Joomla\String\StringHelper;
 
 jimport('joomla.plugin.plugin');
 
@@ -28,7 +29,7 @@ class plgSystemNoExtLinks extends JPlugin
 
     public function onAfterRender()
 	{
-		$jquery_script = "<script type=\"text/javascript\">jQuery(document).ready(function(){jQuery('span.external-link').each(function(i, el){var data = jQuery(el).data(); jQuery(el).wrap(jQuery('<a/>').attr({'href' : data.href, 'title' : data.title, 'target' : data.target}))})})</script></body>";
+		$jquery_script = "<script type=\"text/javascript\">jQuery(document).ready(function(){jQuery('span.external-link').each(function(i, el){var data = jQuery(el).data(); jQuery(el).wrap(jQuery('<a>').attr({'href' : data.href, 'title' : data.title, 'target' : data.target}))})})</script></body>";
 		
 		$app = JFactory::getApplication();
 
@@ -37,8 +38,8 @@ class plgSystemNoExtLinks extends JPlugin
 			return true;
 		}	// Added by chris001.
 
-		$content = JResponse::getBody();
-		if (JString::strpos($content, '</a>') === false)
+		$content = $app->getBody();
+		if (StringHelper::strpos($content, '</a>') === false)
 		{
 			return true;
 		}
@@ -106,7 +107,7 @@ class plgSystemNoExtLinks extends JPlugin
 			$this->_whitelist = explode("\n",$whitelist);
 		}
 
-		$uri = JFactory::getURI();
+		$uri = JUri::getInstance();
 		$host = $uri->getHost();
 
 		$this->_whitelist[] = $host;
@@ -122,11 +123,12 @@ class plgSystemNoExtLinks extends JPlugin
 			$content = preg_replace_callback($regex, array(&$this, '_includeBlocks'), $content);
 		}
 
-		switch ($this->_usejs){
-			case 2 : $content = preg_replace('#<\/body>#s', $jquery_script, $content); break;
+		if ($this->_usejs)
+		{
+			$content = preg_replace('#<\/body>#s', $jquery_script, $content);
 		}
 
-		JResponse::setBody($content);
+		$app->setBody($content);
 		return true;
 	}
 	
@@ -139,7 +141,7 @@ class plgSystemNoExtLinks extends JPlugin
 		$parse = isset($args['href']) ? parse_url($args['href']) : null ;	//fixed by chris001 6-nov-2012.
 		if (isset($parse['host']) && (!$parse['host']))  //Fixed by chris001.
 		{
-			$uri = JFactory::getURI();
+			$uri = JUri::getInstance();
 			$parse['host'] = $uri->getHost();
 		}
 
@@ -177,13 +179,13 @@ class plgSystemNoExtLinks extends JPlugin
 			$params = '';
 			foreach ($args as $key => $value)
 			{
-				$params .= $key . ($this->_usejs ? 'data-' : '') .'="'.$value.'" ';
+				$params .=  ($this->_usejs ? 'data-' : '') . $key . '="' . $value.'" ';
 			}
 
 			if ($this->_usejs)
 			{
 				$params .= 'class="external-link"';
-				$text = $matches[2] . '<span '.$params.'>' .'</span>';
+				$text = '<span '.$params.'>' . $matches[2] . '</span>';
 			}
 			else
 			{
