@@ -109,6 +109,6 @@
 		</fields>
 	</config>
 	<updateservers>
-		<server type="extension" name="Saity74 LLC - GitLab">https://gitlab.s74.org/joomla/update/raw/master/plg_noextlinks/update.xml</server>
+		<server type="extension" name="Saity74 LLC - GitLab">https://gitlab.s74.org/joomla/extensions/raw/master/plg_noextlinks/update.xml</server>
 	</updateservers>
 </extension>

@@ -48,7 +48,7 @@ class plgSystemNoExtLinks extends JPlugin
 		$menu	= $app->getMenu();
 		$active_item	= null;
 
-		if ($menu !== null && property_exists($menu->getActive(), 'id'))
+		if (($menu !== null) && is_object($menu->getActive()) && property_exists($menu->getActive(), 'id')) //fixed by chris001
 		{
 			$active_item = $menu->getActive()->id ; //Fixed by chris001.
 		}
