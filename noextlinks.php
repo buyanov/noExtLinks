@@ -3,11 +3,11 @@
 # plg_noextlinks   Fixes by Chris001 (github) of chris@espacenetworks.com
 # ------------------------------------------------------------------------
 # author &nbsp; &nbsp;Buyanov Danila - Saity74 Ltd.
-# copyright Copyright (C) 2012-2016 saity74.ru. All Rights Reserved.
+# copyright Copyright (C) 2012-2017 saity74.ru. All Rights Reserved.
 # @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 # Websites: https://www.saity74.ru
 # Technical Support: &nbsp; https://saity74.ru/no-external-links-joomla.html
-# Admin E-mail: admin@saity74.ru
+# Admin E-mail: info@saity74.ru
 -------------------------------------------------------------------------*/
 // no direct access
 defined( '_JEXEC' ) or die( 'Restricted access' ); 
@@ -234,13 +234,11 @@ class plgSystemNoExtLinks extends JPlugin
 	/**
 	 * Method for return excluded blocks into content
 	 *
-	 * @param   array  $matches
-	 *
 	 * @return  string
 	 *
 	 * @since 1.0
 	 */
-	protected function _includeBlocks($matches)
+	protected function _includeBlocks()
 	{
 		$block = array_pop($this->_blocks);
 		return '<!-- extlinks -->'.$block.'<!-- /extlinks -->';

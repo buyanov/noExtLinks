@@ -3,11 +3,11 @@
 	<name>plg_noextlinks</name>
 	<author>Buyanov Danila</author>
 	<creationDate>Agust 2012</creationDate>
-	<copyright>Copyright (C) 2005 - 2012 Buyanov Danila. All rights reserved.</copyright>
+	<copyright>Copyright (C) 2005 - 2017 Buyanov Danila. All rights reserved.</copyright>
 	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
 	<authorEmail>info@saity74.ru</authorEmail>
 	<authorUrl>www.saity74.ru</authorUrl>
-	<version>1.6.7</version>
+	<version>1.6.8</version>
 	<description>PLG_NOEXTLINKS_DESC</description>
 	<files>
 		<filename plugin="noextlinks">noextlinks.php</filename>
