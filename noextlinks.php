@@ -14,38 +14,65 @@ defined( '_JEXEC' ) or die( 'Restricted access' );
 
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
+use Joomla\Uri\Uri;
 
-jimport('joomla.plugin.plugin');
 
 class plgSystemNoExtLinks extends JPlugin
 {
-	protected $_addblank;
-	protected $_addNoindex;
-	protected $_addNofollow;
-	protected $_addTitle;
-	protected $_whitelist;
+    /**
+     * Object of Joomla! application class
+     *
+     * @var $app JApplicationSite
+     * @since 1.0
+     */
+    public $app;
+
+	/**
+	 * Array of excluded domains
+	 *
+	 * @var $whitelist array
+	 * @since 1.0
+	 */
+	protected $whitelist = [];
+
+	/**
+	 * Array of excluded html blocks
+	 *
+	 * @var $_blocks array
+	 * @since 1.0
+	 */
+
 	protected $_blocks;
-	protected $_usejs;
 
     public function onAfterRender()
 	{
-		$jquery_script = "<script type=\"text/javascript\">jQuery(document).ready(function(){jQuery('span.external-link').each(function(i, el){var data = jQuery(el).data(); jQuery(el).wrap(jQuery('<a>').attr({'href' : data.href, 'title' : data.title, 'target' : data.target}))})})</script></body>";
-		
-		$app = JFactory::getApplication();
+		$jquery_script = <<<HTML
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        jQuery("span.external-link").each(function(i, el) {
+            var data = jQuery(el).data();
+            jQuery(el).wrap(jQuery("<a>").attr({
+                "href" : data.href, 
+                "title" : data.title, 
+                "target" : data.target
+            }))
+        })
+    })
+</script></body>
+HTML;
 
-		if( $app->isAdmin() )
+		if( $this->app->isAdmin() )
 		{
 			return true;
 		}	// Added by chris001.
 
-		$content = $app->getBody();
+		$content = $this->app->getBody();
 		if (StringHelper::strpos($content, '</a>') === false)
 		{
 			return true;
 		}
 
-		$app	= JFactory::getApplication();
-		$menu	= $app->getMenu();
+		$menu	= $this->app->getMenu();
 		$active_item	= null;
 
 		if (($menu !== null) && is_object($menu->getActive()) && property_exists($menu->getActive(), 'id')) //fixed by chris001
@@ -68,7 +95,7 @@ class plgSystemNoExtLinks extends JPlugin
 			return true;
 		}
 
-		$article_id = $app->input->request->get('id', 0);
+		$article_id = $this->app->input->request->get('id', 0);
 		$articles = explode(',', $this->params->get('excluded_articles', ''));
 
 		if (is_array($articles) && in_array($article_id, $articles, true))
@@ -88,12 +115,12 @@ class plgSystemNoExtLinks extends JPlugin
 
 		if (!empty($categories))
 		{
-			if ($app->input->request->get('option') == 'com_content'
+			if ($this->app->input->request->get('option') == 'com_content'
 				&& (
-					$app->input->request->get('view') == 'category'
-					|| $app->input->request->get('view') == 'blog'
+                    $this->app->input->request->get('view') == 'category'
+					|| $this->app->input->request->get('view') == 'blog'
 				)
-				&& in_array($app->input->request->get('id'), $categories))
+				&& in_array($this->app->input->request->get('id'), $categories))
 			{
 				return true;
 			}
@@ -115,112 +142,145 @@ class plgSystemNoExtLinks extends JPlugin
 		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
 		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
 
-		$this->_addblank = $this->params->get('blank', '_blank') == '_blank';
-		$this->_addNoindex = $this->params->get('noindex', '1') == '1';
-		$this->_addNofollow = $this->params->get('nofollow', '1') == '1';
-		$this->_addTitle = $this->params->get('settitle', '1') == '1';
-		$this->_usejs = $this->params->get('usejs', 0);
-		$whitelist = $this->params->get('whitelist', '');
-		
-		if ($whitelist)
+
+		if ($whitelist = $this->params->get('whitelist', []))
 		{
-			$this->_whitelist = explode("\n",$whitelist);
+		    if (!is_array($whitelist))
+                $whitelist = array_unique(explode("\n", $whitelist));
+
+		    if (!empty($whitelist)) {
+		        foreach ($whitelist as $url) {
+		            if (trim($url)) {
+                        $uri = new Uri(trim($url));
+                        $this->whitelist += [trim($url) => $uri];
+                    }
+                }
+            }
 		}
 
-		$uri = JUri::getInstance();
-		$host = $uri->getHost();
+		$ex_domains = json_decode($this->params->get('excluded_domains'), true);
+        $domains = array_map(array($this, '_createUri'), $ex_domains['scheme'], $ex_domains['host'], $ex_domains['path']);
 
-		$this->_whitelist[] = $host;
+		$theDomain = new Uri(JUri::getInstance());
+		$theDomain->setScheme('*');
+        $theDomain->setPath('/*');
+        $this->whitelist += [$theDomain->toString(['host', 'port']) => $theDomain];
 
-		$regex = "#<a(.*?)>(.*?)</a>#s";
+        $this->whitelist = array_merge($this->whitelist, ...$domains);
 
-		$content = preg_replace_callback($regex, array(&$this, '_replace'), $content);
-		
+        $content = preg_replace_callback('/<a(.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
+
 		if (is_array($this->_blocks) && !empty($this->_blocks))
 		{
 			$this->_blocks = array_reverse($this->_blocks);
-			$regex = '#<!-- noExternalLinks-White-Block -->#s';
-			$content = preg_replace_callback($regex, array(&$this, '_includeBlocks'), $content);
+			$content = preg_replace_callback('/<!-- noExternalLinks-White-Block -->/i', array(&$this, '_includeBlocks'), $content);
 		}
 
-		if ($this->_usejs)
+		if ($this->params->get('usejs'))
 		{
-			$content = preg_replace('#<\/body>#s', $jquery_script, $content);
+			$content = preg_replace('/<\/body>/i', $jquery_script, $content);
 		}
 
-		$app->setBody($content);
+        $this->app->setBody($content);
 		return true;
 	}
-	
-	protected function _replace(&$matches)
+
+    private function _replace(array $matches)
 	{
-		jimport('joomla.utilities.utility');
+        $text = $matches[0];
+
+        if (count($matches) < 2) {
+            return $text;
+        }
 
 		$args = JUtility::parseAttributes($matches[1]);
-		
-		$parse = isset($args['href']) ? parse_url($args['href']) : null ;	//fixed by chris001 6-nov-2012.
-		if (isset($parse['host']) && (!$parse['host']))  //Fixed by chris001.
-		{
-			$uri = JUri::getInstance();
-			$parse['host'] = $uri->getHost();
-		}
 
-		if (isset($parse['host']) && !$this->_in_wl($parse['host']))  //Fixed by chris001.
-		{
-			$params = '';
+        if (!isset($args['href']) || !$args['href']) {
+            return $text;
+        }
 
-			if ($this->_addNofollow)
-			{
-				$args['rel'] = 'nofollow';
-			}
-			else
-			{
-				unset($args['nofollow']);
-			}
+        // is only fragment
+        if (stripos($args['href'], '#') === 0) {
+            return $text;
+        }
 
-			if ($this->_addTitle && (isset($args['title'])) && !$args['title'])  //Fixed by chris001.
-			{
-				$title = trim(strip_tags($matches[2]));
-				if ($title)
-				{
-					$args['title'] = $title;
-				}
-			}
+        $uri = new Uri($args['href']);
 
-			if ($this->_addblank)
-			{
-				$args['target'] = '_blank';
-			}
-			else
-			{
-				unset($args['target']);
-			}
+        $host = $uri->toString(['scheme', 'host', 'port']);
+        $domain = $uri->toString(['host', 'port']);
 
-			$params = '';
-			foreach ($args as $key => $value)
-			{
-				$params .=  ($this->_usejs ? 'data-' : '') . $key . '="' . $value.'" ';
-			}
+        $base = JUri::root();
 
-			if ($this->_usejs)
-			{
-				$params .= 'class="external-link"';
-				$text = '<span '.$params.'>' . $matches[2] . '</span>';
-			}
-			else
-			{
-				if ($this->_addNoindex)
-				{
-					$text = '<noindex><a ' . $params . '>'.$matches[2] . '</a></noindex>';
-				}
-				else
-				{
-					$text = '<a ' . $params . '>' . $matches[2] . '</a>';
-				}
-			}
-		}
-		else
-			$text = $matches[0];
+        // only http(s) links
+        if (!$uri->getHost() && $uri->getScheme()) {
+            return $text;
+        }
+
+        if (empty($matches[2]))
+        {
+            return $text;
+        }
+
+        $anchor_text = $matches[2];
+
+        $isTextAnchor = strip_tags($anchor_text) == $anchor_text;
+
+        if (empty($host) && $uri->getPath()) {
+            if (!$this->params->get('absolutize')) {
+                return $text;
+            }
+            else {
+                return JHTML::link(rtrim($base, '/') . $args['href'], $anchor_text, $args);
+            }
+        }
+
+        if (!empty($host) && isset($this->whitelist[$domain])) {
+            /* @var $eUri Uri */
+            $eUri = $this->whitelist[$domain];
+            if (($eUri->getScheme() == '*' || ($uri->getScheme() == $eUri->getScheme()))
+                && ((strpos($eUri->getHost(), '*.') !== false) || ($uri->getHost() == $eUri->getHost()))
+                && ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath()))) {
+
+                return $text;
+            }
+        }
+
+        $args['class'] = ['external-link'];
+
+        if ($this->params->get('nofollow')) {
+            $args['rel'] = 'nofollow';
+        }
+
+        if ($this->params->get('settitle') && !isset($args['title']) && ($title = trim(strip_tags($anchor_text)))) {
+            $args['title'] = $title;
+        }
+
+        if ($this->params->get('replace_anchor') && $isTextAnchor) {
+            $anchor_text = $args['href'];
+            $args['class'][] = '--href-replaced';
+        }
+
+        if ($this->params->get('blank')) {
+            $args['target'] = '_blank';
+        }
+
+        $useJS = $this->params->get('usejs');
+
+        $props = '';
+        foreach ($args as $key => $value)
+        {
+            $v = is_array($value) ? implode(' ', $value) : $value;
+            $props .=  (!$useJS ? $key : 'data-' . $key) . '="' . $v . '" ';
+        }
+
+        $tagName = $useJS ? 'span' : 'a';
+
+        if ($this->params->get('noindex')) {
+            $text = '<noindex><'. $tagName . ' ' . $props . '>'. $anchor_text . '</'. $tagName .'></noindex>';
+        }
+        else {
+            $text = '<' . $tagName . ' ' . $props . '>' . $anchor_text . '</' . $tagName . '>';
+        }
 
 		return $text;
 	}
@@ -244,25 +304,14 @@ class plgSystemNoExtLinks extends JPlugin
 		return '<!-- extlinks -->'.$block.'<!-- /extlinks -->';
 	}
 
-	/**
-	 * Method for search URL in white list
-	 *
-	 * @param   string  $host  URL
-	 *
-	 * @return  bool
-	 *
-	 * @since 1.0
-	 */
-	protected function _in_wl($host)
-	{
-		foreach ($this->_whitelist as $wh)
-		{
-			$find = trim(str_replace('*', '', $wh));
-			if (stripos($host, $find) !== false)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+	private function _createUri($scheme, $host, $path)
+    {
+        $uri = new Uri();
+        $uri->setScheme($scheme ?: '*');
+        $uri->setHost($host);
+        $uri->setPath($path ?: '/*');
+
+        return [$uri->toString(['host']) => $uri];
+    }
+
 }
