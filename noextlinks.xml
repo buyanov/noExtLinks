@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension version="3.2" type="plugin" group="system" method="upgrade">
-	<name>plg_noextlinks</name>
+	<name>noextlinks</name>
 	<author>Buyanov Danila</author>
 	<creationDate>August 2012</creationDate>
 	<copyright>Copyright (C) 2005 - 2017 Buyanov Danila. All rights reserved.</copyright>
