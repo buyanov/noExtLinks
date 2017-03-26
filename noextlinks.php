@@ -1,15 +1,12 @@
 <?php
-/*------------------------------------------------------------------------
-# plg_noextlinks   Fixes by Chris001 (github) of chris@espacenetworks.com
-# ------------------------------------------------------------------------
-# author &nbsp; &nbsp;Buyanov Danila - Saity74 Ltd.
-# copyright Copyright (C) 2012-2017 saity74.ru. All Rights Reserved.
-# Licensed under the GNU/GPL v2
-# @license - http://www.gnu.org/licenses/gpl-2.0.html
-# Websites: https://www.saity74.ru
-# Technical Support: &nbsp; https://saity74.ru/no-external-links-joomla.html
-# Admin E-mail: info@saity74.ru
--------------------------------------------------------------------------*/
+/**
+ * @package NoExtLinks plugin for Joomla! 3.6
+ * @version $Id: noextlinks.php 599 2012-08-20 23:26:33Z buyanov $
+ * @author Buyanov Danila <info@saity74.ru>
+ * @copyright (C) 2012-2017 Saity74 LLC. All Rights Reserved.
+ * @license GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
+ **/
+
 // no direct access
 defined( '_JEXEC' ) or die( 'Restricted access' );
 
