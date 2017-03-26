@@ -4,13 +4,13 @@
 # ------------------------------------------------------------------------
 # author &nbsp; &nbsp;Buyanov Danila - Saity74 Ltd.
 # copyright Copyright (C) 2012-2017 saity74.ru. All Rights Reserved.
-# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
+# @license - http://www.gnu.org/licenses/gpl-2.0.html
 # Websites: https://www.saity74.ru
 # Technical Support: &nbsp; https://saity74.ru/no-external-links-joomla.html
 # Admin E-mail: info@saity74.ru
 -------------------------------------------------------------------------*/
 // no direct access
-defined( '_JEXEC' ) or die( 'Restricted access' ); 
+defined( '_JEXEC' ) or die( 'Restricted access' );
 
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
@@ -141,7 +141,6 @@ HTML;
 
 		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
 		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
-
 
 		if ($whitelist = $this->params->get('whitelist', []))
 		{
@@ -313,5 +312,4 @@ HTML;
 
         return [$uri->toString(['host']) => $uri];
     }
-
 }
