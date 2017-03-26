@@ -4,6 +4,7 @@
 # ------------------------------------------------------------------------
 # author &nbsp; &nbsp;Buyanov Danila - Saity74 Ltd.
 # copyright Copyright (C) 2012-2017 saity74.ru. All Rights Reserved.
+# Licensed under the GNU/GPL v2
 # @license - http://www.gnu.org/licenses/gpl-2.0.html
 # Websites: https://www.saity74.ru
 # Technical Support: &nbsp; https://saity74.ru/no-external-links-joomla.html
