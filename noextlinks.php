@@ -278,7 +278,7 @@ HTML;
         $tagName = $useJS ? 'span' : 'a';
 
         if ($this->params->get('noindex')) {
-            $text = '<noindex><'. $tagName . ' ' . $props . '>'. $anchor_text . '</'. $tagName .'></noindex>';
+            $text = '<!--noindex--><'. $tagName . ' ' . $props . '>'. $anchor_text . '</'. $tagName .'><!--/noindex-->';
         }
         else {
             $text = '<' . $tagName . ' ' . $props . '>' . $anchor_text . '</' . $tagName . '>';
