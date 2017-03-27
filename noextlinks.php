@@ -156,15 +156,18 @@ HTML;
 		}
 
 		$ex_domains = json_decode($this->params->get('excluded_domains'), true);
-        $domains = array_map(array($this, '_createUri'), $ex_domains['scheme'], $ex_domains['host'], $ex_domains['path']);
+		if (!empty($ex_domains) && is_array($ex_domains)) {
+			$domains = array_map(array($this, '_createUri'), $ex_domains['scheme'], $ex_domains['host'], $ex_domains['path']);
+		}
 
 		$theDomain = new Uri(JUri::getInstance());
 		$theDomain->setScheme('*');
         $theDomain->setPath('/*');
         $this->whitelist += [$theDomain->toString(['host', 'port']) => $theDomain];
 
-        $this->whitelist = array_merge($this->whitelist, ...$domains);
-
+        if (!empty($domains) && is_array($domains)) {
+            $this->whitelist = array_merge($this->whitelist, ...$domains);
+        }
         $content = preg_replace_callback('/<a(.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
 
 		if (is_array($this->_blocks) && !empty($this->_blocks))
