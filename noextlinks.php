@@ -230,7 +230,9 @@ HTML;
                 return $text;
             }
             else {
-                return JHTML::link(rtrim($base, '/') . $args['href'], $anchor_text, $args);
+            	$href = $args['href'];
+            	unset($args['href']);
+                return JHTML::link(rtrim($base, '/') . $href, $anchor_text, $args);
             }
         }
 
