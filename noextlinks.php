@@ -168,7 +168,7 @@ HTML;
         if (!empty($domains) && is_array($domains)) {
             $this->whitelist = array_merge($this->whitelist, ...$domains);
         }
-        $content = preg_replace_callback('/<a(.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
+        $content = preg_replace_callback('/<a (.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
 
 		if (is_array($this->_blocks) && !empty($this->_blocks))
 		{
