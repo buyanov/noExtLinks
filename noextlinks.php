@@ -1,7 +1,7 @@
 <?php
 /**
  * @package NoExtLinks plugin for Joomla! 3.6
- * @version $Id: noextlinks.php 599 2012-08-20 23:26:33Z buyanov $
+ * @version 1.7.4
  * @author Buyanov Danila <info@saity74.ru>
  * @copyright (C) 2012-2017 Saity74 LLC. All Rights Reserved.
  * @license GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
@@ -166,7 +166,7 @@ HTML;
         $this->whitelist += [$theDomain->toString(['host', 'port']) => $theDomain];
 
         if (!empty($domains) && is_array($domains)) {
-            $this->whitelist = array_merge($this->whitelist, ...$domains);
+	        $this->whitelist = array_merge($this->whitelist, call_user_func_array('array_merge', $domains));
         }
         $content = preg_replace_callback('/<a (.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
 
