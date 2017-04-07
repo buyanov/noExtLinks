@@ -62,14 +62,17 @@ class plgSystemNoExtLinks extends JPlugin
 </script></body>
 HTML;
 
+		// Added by chris001.
 		if ($this->app->isAdmin())
 		{
+
 			return true;
-		}	// Added by chris001.
+		}
 
 		$content = $this->app->getBody();
 		if (StringHelper::strpos($content, '</a>') === false)
 		{
+
 			return true;
 		}
 
@@ -93,6 +96,7 @@ HTML;
 
 		if ($activeItem && !empty($items) && is_array($items) && in_array($activeItem, $items))
 		{
+
 			return true;
 		}
 
@@ -101,6 +105,7 @@ HTML;
 
 		if (is_array($articles) && in_array($articleId, $articles, true))
 		{
+
 			return true;
 		}
 
@@ -121,6 +126,7 @@ HTML;
 					|| $this->app->input->request->get('view') == 'blog')
 				&& in_array($this->app->input->request->get('id'), $categories))
 			{
+
 				return true;
 			}
 
@@ -134,6 +140,7 @@ HTML;
 
 			if (!empty($categoryId) && in_array($categoryId, $categories))
 			{
+
 				return true;
 			}
 		}
@@ -172,12 +179,8 @@ HTML;
 
 		if (!empty($domains) && is_array($domains))
 		{
-			/*
-			 * For php 5.6 use unpack operator
-			 * $this->whitelist = array_merge($this->whitelist, ...$domains);
-			 *
-			 */
 
+			// For php 5.6 use unpack operator
 			$this->whiteList = array_merge($this->whiteList, call_user_func_array('array_merge', $domains));
 		}
 		$content = preg_replace_callback('/<a (.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
@@ -194,15 +197,25 @@ HTML;
 		}
 
 		$this->app->setBody($content);
+
 		return true;
 	}
 
+	/**
+	 * Method for replace links
+	 *
+	 * @param array $matches
+	 *
+	 * @return string
+	 * @since 1.0
+	 */
 	private function _replace(array $matches)
 	{
 		$text = $matches[0];
 
 		if (count($matches) < 2)
 		{
+
 			return $text;
 		}
 
@@ -210,12 +223,14 @@ HTML;
 
 		if (!isset($args['href']) || !$args['href'])
 		{
+
 			return $text;
 		}
 
 		// is only fragment
 		if (stripos($args['href'], '#') === 0)
 		{
+
 			return $text;
 		}
 
@@ -229,11 +244,13 @@ HTML;
 		// only http(s) links
 		if (!$uri->getHost() && $uri->getScheme())
 		{
+
 			return $text;
 		}
 
 		if (empty($matches[2]))
 		{
+
 			return $text;
 		}
 
@@ -245,12 +262,14 @@ HTML;
 		{
 			if (!$this->params->get('absolutize'))
 			{
+
 				return $text;
 			}
 			else
 			{
 				$href = $args['href'];
 				unset($args['href']);
+
 				return JHTML::link(rtrim($base, '/') . $href, $anchorText, $args);
 			}
 		}
@@ -263,11 +282,12 @@ HTML;
 				&& ((strpos($eUri->getHost(), '*.') !== false) || ($uri->getHost() == $eUri->getHost()))
 				&& ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath())))
 			{
+
 				return $text;
 			}
 		}
 
-		$args['class'] = ['external-link'];
+		$args['class'] = array('external-link');
 
 		if ($this->params->get('nofollow'))
 		{
@@ -302,7 +322,7 @@ HTML;
 		$tagName = $useJS ? 'span' : 'a';
 
 		if ($this->params->get('noindex')) {
-			$text = '<!--noindex--><'. $tagName . ' ' . $props . '>'. $anchorText . '</'. $tagName .'><!--/noindex-->';
+			$text = '<!--noindex--><' . $tagName . ' ' . $props . '>' . $anchorText . '</' . $tagName . '><!--/noindex-->';
 		}
 		else {
 			$text = '<' . $tagName . ' ' . $props . '>' . $anchorText . '</' . $tagName . '>';
@@ -311,9 +331,17 @@ HTML;
 		return $text;
 	}
 
-	protected function _excludeBlocks($matches)
+	/**
+	 * Method for replace white blocks
+	 *
+	 * @return  string
+	 *
+	 * @since 1.0
+	 */
+	private function _excludeBlocks($matches)
 	{
 		$this->_blocks[] = $matches[1];
+
 		return '<!-- noExternalLinks-White-Block -->';
 	}
 
@@ -324,12 +352,20 @@ HTML;
 	 *
 	 * @since 1.0
 	 */
-	protected function _includeBlocks()
+	private function _includeBlocks()
 	{
 		$block = array_pop($this->_blocks);
+
 		return '<!-- extlinks -->' . $block . '<!-- /extlinks -->';
 	}
 
+	/**
+	 * Method for create Uri string from parts
+	 *
+	 * @return  array
+	 *
+	 * @since 1.0
+	 */
 	private function _createUri($scheme, $host, $path)
 	{
 		$uri = new Uri();
@@ -337,6 +373,6 @@ HTML;
 		$uri->setHost($host);
 		$uri->setPath($path ?: '/*');
 
-		return [$uri->toString(['host']) => $uri];
+		return array($uri->toString(['host']) => $uri);
 	}
 }
