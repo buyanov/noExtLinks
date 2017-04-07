@@ -7,12 +7,17 @@
  * @license GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
  **/
 
-defined( '_JEXEC' ) or die( 'Restricted access' );
+defined('_JEXEC') or die('Restricted access');
 
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
 
+/**
+ * Class plgSystemNoExtLinks
+ *
+ * @since 1.0
+ */
 class plgSystemNoExtLinks extends JPlugin
 {
 	/**
@@ -34,11 +39,10 @@ class plgSystemNoExtLinks extends JPlugin
 	/**
 	 * Array of excluded html blocks
 	 *
-	 * @var $_blocks array
+	 * @var $blocks array
 	 * @since 1.0
 	 */
-
-	protected $_blocks;
+	protected $blocks;
 
 	/**
 	 * Method on After render
@@ -66,14 +70,13 @@ HTML;
 		// Added by chris001.
 		if ($this->app->isAdmin())
 		{
-
 			return true;
 		}
 
 		$content = $this->app->getBody();
+
 		if (StringHelper::strpos($content, '</a>') === false)
 		{
-
 			return true;
 		}
 
@@ -98,7 +101,6 @@ HTML;
 
 		if ($activeItem && !empty($items) && is_array($items) && in_array($activeItem, $items))
 		{
-
 			return true;
 		}
 
@@ -107,7 +109,6 @@ HTML;
 
 		if (is_array($articles) && in_array($articleId, $articles, true))
 		{
-
 			return true;
 		}
 
@@ -124,12 +125,9 @@ HTML;
 		if (!empty($categories))
 		{
 			if ($this->app->input->request->get('option') == 'com_content'
-				&& (($this->app->input->request->get('view') == 'category')
-					|| ($this->app->input->request->get('view') == 'blog'))
-				&& in_array($this->app->input->request->get('id'), $categories)
-			)
+				&& (($this->app->input->request->get('view') == 'category') || ($this->app->input->request->get('view') == 'blog'))
+				&& in_array($this->app->input->request->get('id'), $categories))
 			{
-
 				return true;
 			}
 
@@ -143,7 +141,6 @@ HTML;
 
 			if (!empty($categoryId) && in_array($categoryId, $categories))
 			{
-
 				return true;
 			}
 		}
@@ -154,7 +151,9 @@ HTML;
 		if ($whiteList = $this->params->get('whitelist', array()))
 		{
 			if (!is_array($whiteList))
+			{
 				$whiteList = array_unique(explode("\n", $whiteList));
+			}
 
 			if (!empty($whiteList))
 			{
@@ -170,6 +169,7 @@ HTML;
 		}
 
 		$exDomains = json_decode($this->params->get('excluded_domains'), true);
+
 		if (!empty($exDomains) && is_array($exDomains))
 		{
 			$domains = array_map(array($this, 'createUri'), $exDomains['scheme'], $exDomains['host'], $exDomains['path']);
@@ -182,16 +182,16 @@ HTML;
 
 		if (!empty($domains) && is_array($domains))
 		{
-
 			// For php 5.6 use unpack operator
 			$this->whiteList = array_merge($this->whiteList, call_user_func_array('array_merge', $domains));
 		}
+
 		$content = preg_replace_callback('/<a (.+?)>(.+?)<\/a>/ius', array($this, 'replace'), $content);
 
-		if (is_array($this->_blocks) && !empty($this->_blocks))
+		if (is_array($this->blocks) && !empty($this->blocks))
 		{
-			$this->_blocks = array_reverse($this->_blocks);
-			$content = preg_replace_callback('/<!-- noExternalLinks-White-Block -->/i', array(&$this, 'includeBlocks'), $content);
+			$this->blocks = array_reverse($this->blocks);
+			$content      = preg_replace_callback('/<!-- noExternalLinks-White-Block -->/i', array(&$this, 'includeBlocks'), $content);
 		}
 
 		if ($this->params->get('usejs'))
@@ -207,7 +207,7 @@ HTML;
 	/**
 	 * Method for replace links
 	 *
-	 * @param array $matches
+	 * @param   array  $matches  Array with matched links
 	 *
 	 * @return string
 	 * @since 1.0
@@ -218,7 +218,6 @@ HTML;
 
 		if (count($matches) < 2)
 		{
-
 			return $text;
 		}
 
@@ -226,14 +225,12 @@ HTML;
 
 		if (!isset($args['href']) || !$args['href'])
 		{
-
 			return $text;
 		}
 
 		// Is only fragment
 		if (stripos($args['href'], '#') === 0)
 		{
-
 			return $text;
 		}
 
@@ -245,13 +242,11 @@ HTML;
 		// Only http(s) links
 		if (!$uri->getHost() && $uri->getScheme())
 		{
-
 			return $text;
 		}
 
 		if (empty($matches[2]))
 		{
-
 			return $text;
 		}
 
@@ -263,7 +258,6 @@ HTML;
 		{
 			if (!$this->params->get('absolutize'))
 			{
-
 				return $text;
 			}
 			else
@@ -279,12 +273,11 @@ HTML;
 		{
 			/* @var $eUri Uri */
 			$eUri = $this->whiteList[$domain];
+
 			if (($eUri->getScheme() == '*' || ($uri->getScheme() == $eUri->getScheme()))
 				&& ((strpos($eUri->getHost(), '*.') !== false) || ($uri->getHost() == $eUri->getHost()))
-				&& ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath()))
-			)
+				&& ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath())))
 			{
-
 				return $text;
 			}
 		}
@@ -315,6 +308,7 @@ HTML;
 		$useJS = $this->params->get('usejs');
 
 		$props = '';
+
 		foreach ($args as $key => $value)
 		{
 			$v = is_array($value) ? implode(' ', $value) : $value;
@@ -323,10 +317,12 @@ HTML;
 
 		$tagName = $useJS ? 'span' : 'a';
 
-		if ($this->params->get('noindex')) {
+		if ($this->params->get('noindex'))
+		{
 			$text = '<!--noindex--><' . $tagName . ' ' . $props . '>' . $anchorText . '</' . $tagName . '><!--/noindex-->';
 		}
-		else {
+		else
+		{
 			$text = '<' . $tagName . ' ' . $props . '>' . $anchorText . '</' . $tagName . '>';
 		}
 
@@ -336,14 +332,14 @@ HTML;
 	/**
 	 * Method for replace white blocks
 	 *
-	 * @param  array $matches
+	 * @param   array  $matches  Array of blocks
 	 *
 	 * @return string
 	 * @since 1.0
 	 */
 	private function excludeBlocks($matches)
 	{
-		$this->_blocks[] = $matches[1];
+		$this->blocks[] = $matches[1];
 
 		return '<!-- noExternalLinks-White-Block -->';
 	}
@@ -357,7 +353,7 @@ HTML;
 	 */
 	private function includeBlocks()
 	{
-		$block = array_pop($this->_blocks);
+		$block = array_pop($this->blocks);
 
 		return '<!-- extlinks -->' . $block . '<!-- /extlinks -->';
 	}
@@ -365,16 +361,16 @@ HTML;
 	/**
 	 * Method for create Uri string from parts
 	 *
-	 * @param string $scheme
-	 * @param string $host
-	 * @param string $path
+	 * @param   string  $scheme  Uri scheme
+	 * @param   string  $host    Uri host
+	 * @param   string  $path    Uri path
 	 *
 	 * @return array
 	 * @since 1.0
 	 */
 	private function createUri($scheme, $host, $path)
 	{
-		$uri = new Uri();
+		$uri = new Uri;
 		$uri->setScheme($scheme ?: '*');
 		$uri->setHost($host);
 		$uri->setPath($path ?: '/*');
