@@ -1,24 +1,25 @@
 <?php
 /**
- * @version GIT: $Id$
- * @package NoExtLinks
+ * @package Joomla.plugin
+ * @subpackage  System.noextlinks
+ *
  * @author Buyanov Danila <info@saity74.ru>
  * @copyright (C) 2012-2017 Saity74 LLC. All Rights Reserved.
  * @license GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
  **/
 
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') or die;
 
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
 
 /**
- * Class plgSystemNoExtLinks
+ * Class PlgSystemNoExtLinks
  *
- * @since 1.0
+ * @since 3.2
  */
-class plgSystemNoExtLinks extends JPlugin
+class PlgSystemNoExtLinks extends JPlugin
 {
 	/**
 	 * Object of Joomla! application class
@@ -271,7 +272,6 @@ HTML;
 
 		if (!empty($host) && isset($this->whiteList[$domain]))
 		{
-			/* @var $eUri Uri */
 			$eUri = $this->whiteList[$domain];
 
 			if (($eUri->getScheme() == '*' || ($uri->getScheme() == $eUri->getScheme()))
