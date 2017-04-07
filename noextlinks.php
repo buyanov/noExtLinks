@@ -179,7 +179,7 @@ HTML;
 		$theDomain = new Uri(JUri::getInstance());
 		$theDomain->setScheme('*');
 		$theDomain->setPath('/*');
-		$this->whiteList += [$theDomain->toString(['host', 'port']) => $theDomain];
+		$this->whiteList += array($theDomain->toString(array('host', 'port')) => $theDomain);
 
 		if (!empty($domains) && is_array($domains))
 		{
@@ -337,8 +337,9 @@ HTML;
 	/**
 	 * Method for replace white blocks
 	 *
-	 * @return  string
+	 * @param  array $matches
 	 *
+	 * @return string
 	 * @since 1.0
 	 */
 	private function excludeBlocks($matches)
