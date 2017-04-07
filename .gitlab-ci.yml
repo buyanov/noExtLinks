@@ -1,0 +1,18 @@
+image: docker:git
+
+cache:
+  paths:
+  - vendor/
+
+before_script:
+# Install git, the php image doesn't have installed
+- apt-get update -yqq && apt-get upgrade -y
+# Install composer
+- curl -sS https://getcomposer.org/installer | php
+# Install all project dependencies
+- php composer.phar install
+
+test:5.6:
+  image: php:5.6
+  script:
+  - phpcs --standard=Joomla
