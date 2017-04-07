@@ -33,7 +33,7 @@ class plgSystemNoExtLinks extends JPlugin
 	 * @since 1.0
 	 *
 	 */
-	protected $whiteList = [];
+	protected $whiteList = array();
 
 	/**
 	 * Array of excluded html blocks
@@ -62,7 +62,7 @@ class plgSystemNoExtLinks extends JPlugin
 </script></body>
 HTML;
 
-		if( $this->app->isAdmin() )
+		if ($this->app->isAdmin())
 		{
 			return true;
 		}	// Added by chris001.
@@ -81,7 +81,7 @@ HTML;
 			$activeItem = $menu->getActive()->id ; //Fixed by chris001.
 		}
 
-		$items = [];
+		$items = array();
 		$itemsIds = $this->params->get('excluded_menu_items');
 
 		if ($itemsIds && strpos($itemsIds, ',') !== false)
@@ -89,7 +89,7 @@ HTML;
 			$items = ArrayHelper::toInteger(explode(',', $itemsIds));
 		}
 
-		$items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
+		$items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', array())));
 
 		if ($activeItem && !empty($items) && is_array($items) && in_array($activeItem, $items))
 		{
@@ -104,7 +104,7 @@ HTML;
 			return true;
 		}
 
-		$categories = [];
+		$categories = array();
 		$categoriesIds = $this->params->get('excluded_categories');
 
 		if ($categoriesIds && strpos($categoriesIds, ',') !== false)
@@ -112,7 +112,7 @@ HTML;
 			$categories = ArrayHelper::toInteger(explode(',', $categoriesIds));
 		}
 
-		$categories = array_merge($categories, ArrayHelper::toInteger($this->params->get('excluded_categories_list', [])));
+		$categories = array_merge($categories, ArrayHelper::toInteger($this->params->get('excluded_categories_list', array())));
 
 		if (!empty($categories))
 		{
@@ -141,7 +141,7 @@ HTML;
 		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
 		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
 
-		if ($whiteList = $this->params->get('whitelist', []))
+		if ($whiteList = $this->params->get('whitelist', array()))
 		{
 			if (!is_array($whiteList))
 				$whiteList = array_unique(explode("\n", $whiteList));
@@ -296,7 +296,7 @@ HTML;
 		foreach ($args as $key => $value)
 		{
 			$v = is_array($value) ? implode(' ', $value) : $value;
-			$props .=  (!$useJS ? $key : 'data-' . $key) . '="' . $v . '" ';
+			$props .= (!$useJS ? $key : 'data-' . $key) . '="' . $v . '" ';
 		}
 
 		$tagName = $useJS ? 'span' : 'a';
@@ -327,7 +327,7 @@ HTML;
 	protected function _includeBlocks()
 	{
 		$block = array_pop($this->_blocks);
-		return '<!-- extlinks -->'.$block.'<!-- /extlinks -->';
+		return '<!-- extlinks -->' . $block . '<!-- /extlinks -->';
 	}
 
 	private function _createUri($scheme, $host, $path)
