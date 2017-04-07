@@ -166,6 +166,8 @@ HTML;
         $this->whitelist += [$theDomain->toString(['host', 'port']) => $theDomain];
 
         if (!empty($domains) && is_array($domains)) {
+        	// For php 5.6 use unpack operator
+	        // $this->whitelist = array_merge($this->whitelist, ...$domains);
 	        $this->whitelist = array_merge($this->whitelist, call_user_func_array('array_merge', $domains));
         }
         $content = preg_replace_callback('/<a (.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
