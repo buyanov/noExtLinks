@@ -1,7 +1,7 @@
 <?php
 /**
  * @package NoExtLinks
- * @version $Id:$
+ * @version GIT: 1.7.4
  * @author Buyanov Danila <info@saity74.ru>
  * @copyright (C) 2012-2017 Saity74 LLC. All Rights Reserved.
  * @license GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
