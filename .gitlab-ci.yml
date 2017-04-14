@@ -14,6 +14,6 @@ before_script:
 - php composer.phar install
 
 test:5.6:
-  image: php:5.6
+  image: php:7.1
   script:
   - ./vendor/bin/phpcs --extensions=php noextlinks.php
