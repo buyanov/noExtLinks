@@ -1,12 +1,15 @@
 {
+  "require"    : {
+    "php": ">=5.3.10"
+  },
   "require-dev": {
-    "squizlabs/php_codesniffer": "~2.8",
-    "greencape/coding-standards": "~1",
-    "phpunit/phpunit": "^6",
-    "phpunit/dbunit": "@stable",
-    "phpmd/phpmd" : "@stable",
-    "joomla/test" : "@stable",
-    "joomla/application" : "@stable",
-    "joomla/uri" : "@stable"
+    "codeception/codeception": "^2.2",
+    "joomla-projects/joomla-browser": "v3.6.5.1",
+    "consolidation/robo": "^1.0.0",
+    "joomla-projects/robo": "~0",
+    "joomla-projects/selenium-server-standalone": "v3.1.0",
+    "fzaninotto/faker": "^1.6",
+    "joomla-projects/jorobo": "~0.6",
+    "Behat/Gherkin": "^4.4.1"
   }
 }
