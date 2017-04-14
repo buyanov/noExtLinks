@@ -86,7 +86,7 @@ class PlgSystemNoExtLinks extends JPlugin
 </script></body>
 HTML;
 
-		if (!$this->app->isClient('site'))
+		if ($this->app->isAdmin())
 		{
 			return true;
 		}
