@@ -1,0 +1,12 @@
+{
+  "require-dev": {
+    "squizlabs/php_codesniffer": "~2.8",
+    "greencape/coding-standards": "~1",
+    "phpunit/phpunit": "^6",
+    "phpunit/dbunit": "@stable",
+    "phpmd/phpmd" : "@stable",
+    "joomla/test" : "@stable",
+    "joomla/application" : "@stable",
+    "joomla/uri" : "@stable"
+  }
+}

@@ -1,7 +1,6 @@
 /.idea
 # Created by .ignore support plugin (hsz.mobi)
 ### Joomla template
-/.gitignore
 /.htaccess
 /administrator/cache/*
 /administrator/components/com_admin/*
@@ -537,3 +536,4 @@
 /*.txt
 /robots.txt.dist
 
+/vendor/

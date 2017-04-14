@@ -1,50 +1,76 @@
 <?php
 /**
- * @package NoExtLinks plugin for Joomla! 3.6
- * @version 1.7.4
- * @author Buyanov Danila <info@saity74.ru>
- * @copyright (C) 2012-2017 Saity74 LLC. All Rights Reserved.
- * @license GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
+ * @package     Joomla.plugin
+ * @subpackage  System.noextlinks
+ *
+ * @author      Buyanov Danila <info@saity74.ru>
+ * @copyright   (C) 2012-2017 Saity74 LLC. All Rights Reserved.
+ * @license     GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
  **/
 
-// no direct access
-defined( '_JEXEC' ) or die( 'Restricted access' );
+defined('_JEXEC') or die;
 
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
 
-
-class plgSystemNoExtLinks extends JPlugin
+/**
+ * Class PlgSystemNoExtLinks
+ *
+ * @since 3.2
+ */
+class PlgSystemNoExtLinks extends JPlugin
 {
-    /**
-     * Object of Joomla! application class
-     *
-     * @var $app JApplicationSite
-     * @since 1.0
-     */
-    public $app;
+	/**
+	 * Object of Joomla! application class
+	 *
+	 * @var $app JApplicationSite
+	 * @since 1.0
+	 */
+	public $app;
 
 	/**
 	 * Array of excluded domains
 	 *
-	 * @var $whitelist array
+	 * @var $whiteList array
 	 * @since 1.0
 	 */
-	protected $whitelist = [];
+	protected $whiteList = array();
 
 	/**
 	 * Array of excluded html blocks
 	 *
-	 * @var $_blocks array
+	 * @var $blocks array
 	 * @since 1.0
 	 */
+	protected static $blocks;
 
-	protected $_blocks;
-
-    public function onAfterRender()
+	/**
+	 * Constructor
+	 *
+	 * @param   object  $subject  The object to observe
+	 * @param   array   $config   An optional associative array of configuration settings.
+	 *                            Recognized key values include 'name', 'group', 'params', 'language'
+	 *                            (this list is not meant to be comprehensive).
+	 *
+	 * @since   __VERSION__
+	 */
+	public function __construct($subject, array $config = array())
 	{
-		$jquery_script = <<<HTML
+		parent::__construct($subject, $config);
+
+		$this->createWhiteList();
+	}
+
+	/**
+	 * Method on After render
+	 *
+	 * @return boolean
+	 * @since 1.0
+	 */
+	public function onAfterRender()
+	{
+		$jqueryScript = <<<HTML
 <script type="text/javascript">
     jQuery(document).ready(function() {
         jQuery("span.external-link").each(function(i, el) {
@@ -52,246 +78,120 @@ class plgSystemNoExtLinks extends JPlugin
             jQuery(el).wrap(jQuery("<a>").attr({
                 "href" : data.href, 
                 "title" : data.title, 
-                "target" : data.target
+                "target" : data.target,
+                "rel" : data.rel
             }))
         })
     })
 </script></body>
 HTML;
 
-		if( $this->app->isAdmin() )
+		if (!$this->app->isClient('site'))
 		{
 			return true;
-		}	// Added by chris001.
+		}
 
 		$content = $this->app->getBody();
+
 		if (StringHelper::strpos($content, '</a>') === false)
 		{
 			return true;
 		}
 
-		$menu	= $this->app->getMenu();
-		$active_item	= null;
-
-		if (($menu !== null) && is_object($menu->getActive()) && property_exists($menu->getActive(), 'id')) //fixed by chris001
-		{
-			$active_item = $menu->getActive()->id ; //Fixed by chris001.
-		}
-
-		$items = [];
-		$items_ids = $this->params->get('excluded_menu_items');
-
-		if ($items_ids && strpos($items_ids, ',') !== false)
-		{
-			$items = ArrayHelper::toInteger(explode(',', $items_ids));
-		}
-
-		$items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
-
-		if ($active_item && !empty($items) && is_array($items) && in_array($active_item, $items))
+		if ($this->checkArticle() || $this->checkMenuItem() || $this->checkCategory())
 		{
 			return true;
 		}
 
-		$article_id = $this->app->input->request->get('id', 0);
-		$articles = explode(',', $this->params->get('excluded_articles', ''));
+		$content = preg_replace_callback('#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s', 'static::excludeBlocks', $content);
 
-		if (is_array($articles) && in_array($article_id, $articles, true))
+		$regex = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^>]*)>(?P<anchor>.*?)<\/a>/ius';
+		$content = preg_replace_callback($regex, array($this, 'replace'), $content);
+
+		if (is_array(static::$blocks) && !empty(static::$blocks))
 		{
-			return true;
-		}
-
-		$categories = [];
-		$categories_ids = $this->params->get('excluded_categories');
-
-		if ($categories_ids && strpos($categories_ids, ',') !== false)
-		{
-			$categories = ArrayHelper::toInteger(explode(',', $categories_ids));
-		}
-
-		$categories = array_merge($categories, ArrayHelper::toInteger($this->params->get('excluded_categories_list', [])));
-
-		if (!empty($categories))
-		{
-			if ($this->app->input->request->get('option') == 'com_content'
-				&& (
-                    $this->app->input->request->get('view') == 'category'
-					|| $this->app->input->request->get('view') == 'blog'
-				)
-				&& in_array($this->app->input->request->get('id'), $categories))
-			{
-				return true;
-			}
-
-			$db = JFactory::getDbo();
-			$query = $db->getQuery(true)
-				->select($db->qn('catid'))
-				->from($db->qn('#__content'))
-				->where($db->qn('id') . ' = ' . $db->q((int) $article_id));
-
-			$category_id = $db->setQuery($query)->loadResult();
-
-			if (!empty($category_id) && in_array($category_id, $categories))
-			{
-				return true;
-			}
-		}
-
-		$regex = '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s';
-		$content = preg_replace_callback($regex, array(&$this, '_excludeBlocks'), $content);
-
-		if ($whitelist = $this->params->get('whitelist', []))
-		{
-		    if (!is_array($whitelist))
-                $whitelist = array_unique(explode("\n", $whitelist));
-
-		    if (!empty($whitelist)) {
-		        foreach ($whitelist as $url) {
-		            if (trim($url)) {
-                        $uri = new Uri(trim($url));
-                        $this->whitelist += [trim($url) => $uri];
-                    }
-                }
-            }
-		}
-
-		$ex_domains = json_decode($this->params->get('excluded_domains'), true);
-		if (!empty($ex_domains) && is_array($ex_domains)) {
-			$domains = array_map(array($this, '_createUri'), $ex_domains['scheme'], $ex_domains['host'], $ex_domains['path']);
-		}
-
-		$theDomain = new Uri(JUri::getInstance());
-		$theDomain->setScheme('*');
-        $theDomain->setPath('/*');
-        $this->whitelist += [$theDomain->toString(['host', 'port']) => $theDomain];
-
-        if (!empty($domains) && is_array($domains)) {
-        	// For php 5.6 use unpack operator
-	        // $this->whitelist = array_merge($this->whitelist, ...$domains);
-	        $this->whitelist = array_merge($this->whitelist, call_user_func_array('array_merge', $domains));
-        }
-        $content = preg_replace_callback('/<a (.+?)>(.+?)<\/a>/ius', array($this, '_replace'), $content);
-
-		if (is_array($this->_blocks) && !empty($this->_blocks))
-		{
-			$this->_blocks = array_reverse($this->_blocks);
-			$content = preg_replace_callback('/<!-- noExternalLinks-White-Block -->/i', array(&$this, '_includeBlocks'), $content);
+			static::$blocks = array_reverse(static::$blocks);
+			$content = preg_replace_callback('/<!-- noExternalLinks-White-Block -->/i', 'static::includeBlocks', $content);
 		}
 
 		if ($this->params->get('usejs'))
 		{
-			$content = preg_replace('/<\/body>/i', $jquery_script, $content);
+			$content = preg_replace('/<\/body>/i', $jqueryScript, $content);
 		}
 
-        $this->app->setBody($content);
+		$this->app->setBody($content);
+
 		return true;
 	}
 
-    private function _replace(array $matches)
+	/**
+	 * Method for replace links
+	 *
+	 * @param   array  $matches  Array with matched links
+	 *
+	 * @return  mixed|string
+	 * @since 1.0
+	 */
+	protected function replace($matches)
 	{
-        $text = $matches[0];
+		static::checkMatch($matches);
 
-        if (count($matches) < 2) {
-            return $text;
-        }
+		$text = $matches[0];
 
-		$args = JUtility::parseAttributes($matches[1]);
+		if (stripos($matches['href'], '#') === 0)
+		{
+			return $text;
+		}
 
-        if (!isset($args['href']) || !$args['href']) {
-            return $text;
-        }
+		$anchor = $matches['anchor'];
+		$base = JUri::root();
+		$href = $matches['href'];
+		$args = JUtility::parseAttributes($matches['args']);
+		$uri = new Uri($href);
 
-        // is only fragment
-        if (stripos($args['href'], '#') === 0) {
-            return $text;
-        }
+		if (empty($anchor) || (!$uri->getHost() && $uri->getScheme()))
+		{
+			return $text;
+		}
 
-        $uri = new Uri($args['href']);
+		if ($this->isRelativeUri($uri))
+		{
+			if ($this->params->get('absolutize'))
+			{
+				unset($args['href']);
+				$text = JHTML::link(rtrim($base, '/') . $href, $anchor, $args);
+			}
 
-        $host = $uri->toString(['scheme', 'host', 'port']);
-        $domain = $uri->toString(['host', 'port']);
+			return $text;
+		}
 
-        $base = JUri::root();
+		if ($this->isExcludedUri($uri))
+		{
+			return $text;
+		}
 
-        // only http(s) links
-        if (!$uri->getHost() && $uri->getScheme()) {
-            return $text;
-        }
+		$text = $this->link($anchor, $args);
 
-        if (empty($matches[2]))
-        {
-            return $text;
-        }
-
-        $anchor_text = $matches[2];
-
-        $isTextAnchor = strip_tags($anchor_text) == $anchor_text;
-
-        if (empty($host) && $uri->getPath()) {
-            if (!$this->params->get('absolutize')) {
-                return $text;
-            }
-            else {
-            	$href = $args['href'];
-            	unset($args['href']);
-                return JHTML::link(rtrim($base, '/') . $href, $anchor_text, $args);
-            }
-        }
-
-        if (!empty($host) && isset($this->whitelist[$domain])) {
-            /* @var $eUri Uri */
-            $eUri = $this->whitelist[$domain];
-            if (($eUri->getScheme() == '*' || ($uri->getScheme() == $eUri->getScheme()))
-                && ((strpos($eUri->getHost(), '*.') !== false) || ($uri->getHost() == $eUri->getHost()))
-                && ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath()))) {
-
-                return $text;
-            }
-        }
-
-        $args['class'] = ['external-link'];
-
-        if ($this->params->get('nofollow')) {
-            $args['rel'] = 'nofollow';
-        }
-
-        if ($this->params->get('settitle') && !isset($args['title']) && ($title = trim(strip_tags($anchor_text)))) {
-            $args['title'] = $title;
-        }
-
-        if ($this->params->get('replace_anchor') && $isTextAnchor) {
-            $anchor_text = $args['href'];
-            $args['class'][] = '--href-replaced';
-        }
-
-        if ($this->params->get('blank')) {
-            $args['target'] = '_blank';
-        }
-
-        $useJS = $this->params->get('usejs');
-
-        $props = '';
-        foreach ($args as $key => $value)
-        {
-            $v = is_array($value) ? implode(' ', $value) : $value;
-            $props .=  (!$useJS ? $key : 'data-' . $key) . '="' . $v . '" ';
-        }
-
-        $tagName = $useJS ? 'span' : 'a';
-
-        if ($this->params->get('noindex')) {
-            $text = '<!--noindex--><'. $tagName . ' ' . $props . '>'. $anchor_text . '</'. $tagName .'><!--/noindex-->';
-        }
-        else {
-            $text = '<' . $tagName . ' ' . $props . '>' . $anchor_text . '</' . $tagName . '>';
-        }
+		if ($this->params->get('noindex'))
+		{
+			$text = '<!--noindex-->' . $text . '<!--/noindex-->';
+		}
 
 		return $text;
 	}
 
-	protected function _excludeBlocks($matches)
+	/**
+	 * Method for replace white blocks
+	 *
+	 * @param   array  $matches  Array of blocks
+	 *
+	 * @return  string
+	 * @since 1.0
+	 */
+	protected static function excludeBlocks($matches)
 	{
-		$this->_blocks[] = $matches[1];
+		static::$blocks[] = $matches[1];
+
 		return '<!-- noExternalLinks-White-Block -->';
 	}
 
@@ -299,22 +199,308 @@ HTML;
 	 * Method for return excluded blocks into content
 	 *
 	 * @return  string
-	 *
 	 * @since 1.0
 	 */
-	protected function _includeBlocks()
+	protected static function includeBlocks()
 	{
-		$block = array_pop($this->_blocks);
-		return '<!-- extlinks -->'.$block.'<!-- /extlinks -->';
+		$block = array_pop(static::$blocks);
+
+		return '<!-- extlinks -->' . $block . '<!-- /extlinks -->';
 	}
 
-	private function _createUri($scheme, $host, $path)
-    {
-        $uri = new Uri();
-        $uri->setScheme($scheme ?: '*');
-        $uri->setHost($host);
-        $uri->setPath($path ?: '/*');
+	/**
+	 * Method for create Uri string from parts
+	 *
+	 * @param   string  $scheme  Uri scheme
+	 * @param   string  $host    Uri host
+	 * @param   string  $path    Uri path
+	 *
+	 * @return  array
+	 * @since 1.0
+	 */
+	protected static function createUri($scheme, $host, $path)
+	{
+		$uri = new Uri;
+		$uri->setScheme($scheme ?: '*');
+		$uri->setHost($host);
+		$uri->setPath($path ?: '/*');
 
-        return [$uri->toString(['host']) => $uri];
-    }
+		return array($uri->toString(array('host')) => $uri);
+	}
+
+	/**
+	 * Method for get categories
+	 *
+	 * @return  array
+	 * @since   __VERSION__
+	 */
+	private function getExcludedCategories()
+	{
+		$categories = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_categories', '')));
+		$categories = array_merge($categories, ArrayHelper::toInteger($this->params->get('excluded_category_list', array())));
+
+		return $categories;
+	}
+
+	/**
+	 * Check the buffer.
+	 *
+	 * @param   string  $match  Buffer to be checked.
+	 *
+	 * @return  void
+	 * @since   __VERSION__
+	 */
+	private function checkMatch($match)
+	{
+		if ($match === null)
+		{
+			switch (preg_last_error())
+			{
+				case PREG_BACKTRACK_LIMIT_ERROR:
+					$message = "PHP regular expression limit reached (pcre.backtrack_limit)";
+					break;
+				case PREG_RECURSION_LIMIT_ERROR:
+					$message = "PHP regular expression limit reached (pcre.recursion_limit)";
+					break;
+				case PREG_BAD_UTF8_ERROR:
+					$message = "Bad UTF8 passed to PCRE function";
+					break;
+				default:
+					$message = "Unknown PCRE error calling PCRE function";
+			}
+
+			throw new RuntimeException($message);
+		}
+	}
+
+	/**
+	 * Check the URI.
+	 *
+	 * @param   Uri  $uri  Uri object to be checked.
+	 *
+	 * @return  boolean
+	 * @since   __VERSION__
+	 */
+	private function isRelativeUri($uri)
+	{
+
+		return (!$uri->toString(array('scheme', 'host', 'port')) && $uri->toString(array('path', 'query', 'fragment')));
+	}
+
+	/**
+	 * Check the URI.
+	 *
+	 * @param   Uri  $uri  Uri object to be checked.
+	 *
+	 * @return  boolean
+	 * @since   __VERSION__
+	 */
+	private function isExcludedUri($uri)
+	{
+		$isExcluded = false;
+		$domain = $uri->toString(array('host', 'port'));
+
+		if (!empty($domain) && isset($this->whiteList[$domain]))
+		{
+			$eUri = $this->whiteList[$domain];
+
+			if (($eUri->getScheme() == '*' || ($uri->getScheme() == $eUri->getScheme()))
+				&& ((strpos($eUri->getHost(), '*.') !== false) || ($uri->getHost() == $eUri->getHost()))
+				&& ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath())))
+			{
+				$isExcluded = true;
+			}
+		}
+
+		return $isExcluded;
+	}
+
+	/**
+	 * Method for get categories
+	 *
+	 * @return  array
+	 * @since   __VERSION__
+	 */
+	private function getExcludedMenuItems()
+	{
+		$items = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_menu_items', '')), array());
+		$items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', array())));
+
+		return $items;
+	}
+
+	/**
+	 * Method for check active menu item
+	 *
+	 * @return boolean
+	 * @since  __VERSION__
+	 */
+	private function checkMenuItem()
+	{
+		$result = false;
+
+		if ($menu = $this->app->getMenu())
+		{
+			if ($activeItem	= $menu->getActive())
+			{
+				$items = $this->getExcludedMenuItems();
+
+				$result = !empty($items) && is_array($items) && in_array($activeItem->id, $items);
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Method for check current category
+	 *
+	 * @return boolean
+	 * @since  __VERSION__
+	 */
+	private function checkCategory()
+	{
+		$result = false;
+		$categories = $this->getExcludedCategories();
+		$extension = $this->app->input->request->get('option');
+		$view = $this->app->input->request->get('view');
+		$id = $this->app->input->request->get('id');
+
+		if (!empty($categories) && $extension == 'com_content')
+		{
+			if (($view == 'blog' || $view == 'category') && in_array($id, $categories))
+			{
+				return true;
+			}
+
+			$currentArticle = $this->getCurrentArticle();
+
+			$result = $currentArticle && in_array($currentArticle->catid, $categories);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Method for create white list
+	 *
+	 * @return  void
+	 * @since __VERSION__
+	 */
+	private function createWhiteList()
+	{
+		$whiteList = $this->params->get('whitelist', array());
+
+		if (!is_array($whiteList))
+		{
+			$whiteList = array_unique(explode("\n", $whiteList));
+		}
+
+		if (!empty($whiteList))
+		{
+			foreach ($whiteList as $url)
+			{
+				if (trim($url))
+				{
+					$uri = new Uri(trim($url));
+					$this->whiteList += array(trim($url) => $uri);
+				}
+			}
+		}
+
+		$exDomains = json_decode($this->params->get('excluded_domains'), true);
+
+		if (!empty($exDomains) && is_array($exDomains))
+		{
+			$domains = array_map("static::createUri", $exDomains['scheme'], $exDomains['host'], $exDomains['path']);
+		}
+
+		$theDomain = new Uri(JUri::getInstance());
+		$theDomain->setScheme('*');
+		$theDomain->setPath('/*');
+		$this->whiteList += array($theDomain->toString(array('host', 'port')) => $theDomain);
+
+		if (!empty($domains) && is_array($domains))
+		{
+			// For php 5.6 use unpack operator
+			$this->whiteList = array_merge($this->whiteList, call_user_func_array('array_merge', $domains));
+		}
+	}
+
+	/**
+	 * Method for check current article
+	 *
+	 * @return boolean
+	 * @since  __VERSION__
+	 */
+	private function checkArticle()
+	{
+		$articles = explode(',', $this->params->get('excluded_articles', ''));
+		$article = $this->getCurrentArticle();
+
+		return (is_object($article) && is_array($articles) && in_array($article->id, $articles));
+	}
+
+	/**
+	 * Method get current article item
+	 *
+	 * @return object|null
+	 * @since  __VERSION__
+	 */
+	private function getCurrentArticle()
+	{
+
+		if (!JLoader::import('models.article', JPATH_COMPONENT_SITE))
+		{
+			return null;
+		}
+
+		$articleModel = new ContentModelArticle();
+		$currentArticle = $articleModel->getItem();
+
+		return $currentArticle ?: null;
+	}
+
+	/**
+	 * Method for generate link
+	 *
+	 * @param   string  $anchor  Link anchor
+	 * @param   array   $args    Array with link attributes
+	 *
+	 * @return  string
+	 * @since   __VERSION__
+	 */
+	private function link($anchor, $args)
+	{
+		$args['class'] = array('external-link');
+		$args['rel'] = $this->params->get('nofollow');
+		$args['target'] = $this->params->get('blank');
+		$anchorText = trim(strip_tags($anchor));
+
+		if ($this->params->get('settitle') && !isset($args['title']) && $anchorText)
+		{
+			$args['title'] = $anchorText;
+		}
+
+		if ($this->params->get('replace_anchor') && $anchorText == $anchor)
+		{
+			$anchor = $args['href'];
+			$args['class'][] = '--href-replaced';
+		}
+
+		$args = array_filter($args);
+
+		$useJS = $this->params->get('usejs');
+		$props = '';
+
+		foreach ($args as $key => $value)
+		{
+			$v = is_array($value) ? implode(' ', $value) : $value;
+			$props .= (!$useJS ? $key : 'data-' . $key) . '="' . $v . '" ';
+		}
+
+		$tagName = $useJS ? 'span' : 'a';
+
+		return '<' . $tagName . ' ' . $props . '>' . $anchor . '</' . $tagName . '>';
+	}
 }
