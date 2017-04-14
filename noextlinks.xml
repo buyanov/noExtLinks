@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<extension version="3.2" type="plugin" group="system" method="upgrade">
-	<name>noExternalLinks</name>
+<extension version="3.1" type="plugin" group="system" method="upgrade">
+	<name>noextlinks</name>
 	<author>Buyanov Danila</author>
 	<creationDate>01 August 2012</creationDate>
 	<copyright>Copyright (C) 2005 - 2017 Buyanov Danila. All rights reserved.</copyright>
 	<license>GNU/GPL v2 or later http://www.gnu.org/licenses/gpl-2.0.html</license>
 	<authorEmail>info@saity74.ru</authorEmail>
 	<authorUrl>www.saity74.ru</authorUrl>
-	<version>1.7.4</version>
+	<version>__VERSION__</version>
 	<description>PLG_NOEXTLINKS_DESC</description>
 	<files>
 		<filename plugin="noextlinks">noextlinks.php</filename>
@@ -35,8 +35,8 @@
 					   description="PLG_SYSTEM_NOEXTLINKS_NOFOLLOW_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_NOFOLLOW_LABEL"
 				>
-					<option value="0">JNO</option>
-					<option value="1">JYES</option>
+					<option value="">JNO</option>
+					<option value="nofollow">JYES</option>
 				</field>
 				<field name="settitle" type="radio"
 					   default="1" class="btn-group btn-group-yesno"

@@ -16,4 +16,4 @@ before_script:
 test:5.6:
   image: php:5.6
   script:
-  - ./vendor/bin/phpcs --extensions=php --standard=./vendor/greencape/coding-standards/src/Joomla/ noextlinks.php
+  - ./vendor/bin/phpcs --extensions=php noextlinks.php

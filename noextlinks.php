@@ -78,14 +78,15 @@ class PlgSystemNoExtLinks extends JPlugin
             jQuery(el).wrap(jQuery("<a>").attr({
                 "href" : data.href, 
                 "title" : data.title, 
-                "target" : data.target
+                "target" : data.target,
+                "rel" : data.rel
             }))
         })
     })
 </script></body>
 HTML;
 
-		if (!$this->app->isSite())
+		if (!$this->app->isClient('site'))
 		{
 			return true;
 		}
@@ -131,7 +132,7 @@ HTML;
 	 * @return  mixed|string
 	 * @since 1.0
 	 */
-	private function replace($matches)
+	protected function replace($matches)
 	{
 		static::checkMatch($matches);
 
@@ -472,7 +473,7 @@ HTML;
 	private function link($anchor, $args)
 	{
 		$args['class'] = array('external-link');
-		$args['rel'] = ((int) $this->params->get('nofollow')) ? 'nofollow' : '';
+		$args['rel'] = $this->params->get('nofollow');
 		$args['target'] = $this->params->get('blank');
 		$anchorText = trim(strip_tags($anchor));
 
