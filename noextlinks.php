@@ -80,7 +80,7 @@ class PlgSystemNoExtLinks extends JPlugin
                 "title" : data.title, 
                 "target" : data.target,
                 "rel" : data.rel
-            }))
+            }).addClass(jQuery(el).prop('class')))
         })
     })
 </script></body>
@@ -480,6 +480,7 @@ HTML;
 		if ($this->params->get('settitle') && !isset($args['title']) && $anchorText)
 		{
 			$args['title'] = $anchorText;
+			$args['class'][] = '--set-title';
 		}
 
 		if ($this->params->get('replace_anchor') && $anchorText == $anchor)
@@ -488,15 +489,23 @@ HTML;
 			$args['class'][] = '--href-replaced';
 		}
 
+		if ($useJS = $this->params->get('usejs'))
+		{
+			$args['class'][] = 'js-modify';
+		}
+
 		$args = array_filter($args);
 
-		$useJS = $this->params->get('usejs');
 		$props = '';
 
 		foreach ($args as $key => $value)
 		{
 			$v = is_array($value) ? implode(' ', $value) : $value;
-			$props .= (!$useJS ? $key : 'data-' . $key) . '="' . $v . '" ';
+			if ($useJS && $key !== 'class')
+			{
+				$key = 'data-' . $key;
+			}
+			$props .= $key . '="' . $v . '" ';
 		}
 
 		$tagName = $useJS ? 'span' : 'a';
