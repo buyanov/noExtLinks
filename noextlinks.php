@@ -450,6 +450,12 @@ HTML;
 	private function getCurrentArticle()
 	{
 
+		if (($this->app->input->get('option') !== 'com_content')
+			|| ($this->app->input->get('view') !== 'article') || !$this->app->input->get('id'))
+		{
+			return null;
+		}
+
 		if (!JLoader::import('models.article', JPATH_COMPONENT_SITE))
 		{
 			return null;
@@ -457,6 +463,7 @@ HTML;
 
 		$articleModel = new ContentModelArticle();
 		$currentArticle = $articleModel->getItem();
+
 
 		return $currentArticle ?: null;
 	}
