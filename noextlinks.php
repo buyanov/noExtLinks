@@ -53,7 +53,7 @@ class PlgSystemNoExtLinks extends JPlugin
 	 *                            Recognized key values include 'name', 'group', 'params', 'language'
 	 *                            (this list is not meant to be comprehensive).
 	 *
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	public function __construct($subject, array $config = array())
 	{
@@ -232,7 +232,7 @@ HTML;
 	 * Method for get categories
 	 *
 	 * @return  array
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	private function getExcludedCategories()
 	{
@@ -248,7 +248,7 @@ HTML;
 	 * @param   string  $match  Buffer to be checked.
 	 *
 	 * @return  void
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	private function checkMatch($match)
 	{
@@ -279,7 +279,7 @@ HTML;
 	 * @param   Uri  $uri  Uri object to be checked.
 	 *
 	 * @return  boolean
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	private function isRelativeUri($uri)
 	{
@@ -293,7 +293,7 @@ HTML;
 	 * @param   Uri  $uri  Uri object to be checked.
 	 *
 	 * @return  boolean
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	private function isExcludedUri($uri)
 	{
@@ -319,7 +319,7 @@ HTML;
 	 * Method for get categories
 	 *
 	 * @return  array
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	private function getExcludedMenuItems()
 	{
@@ -333,7 +333,7 @@ HTML;
 	 * Method for check active menu item
 	 *
 	 * @return boolean
-	 * @since  __VERSION__
+	 * @since  1.7.5
 	 */
 	private function checkMenuItem()
 	{
@@ -356,7 +356,7 @@ HTML;
 	 * Method for check current category
 	 *
 	 * @return boolean
-	 * @since  __VERSION__
+	 * @since  1.7.5
 	 */
 	private function checkCategory()
 	{
@@ -385,7 +385,7 @@ HTML;
 	 * Method for create white list
 	 *
 	 * @return  void
-	 * @since __VERSION__
+	 * @since 1.7.5
 	 */
 	private function createWhiteList()
 	{
@@ -431,7 +431,7 @@ HTML;
 	 * Method for check current article
 	 *
 	 * @return boolean
-	 * @since  __VERSION__
+	 * @since  1.7.5
 	 */
 	private function checkArticle()
 	{
@@ -445,7 +445,7 @@ HTML;
 	 * Method get current article item
 	 *
 	 * @return object|null
-	 * @since  __VERSION__
+	 * @since  1.7.5
 	 */
 	private function getCurrentArticle()
 	{
@@ -468,7 +468,7 @@ HTML;
 	 * @param   array   $args    Array with link attributes
 	 *
 	 * @return  string
-	 * @since   __VERSION__
+	 * @since   1.7.5
 	 */
 	private function link($anchor, $args)
 	{
