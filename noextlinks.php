@@ -70,7 +70,7 @@ class PlgSystemNoExtLinks extends JPlugin
 	 */
 	public function onAfterRender()
 	{
-		$jqueryScript = <<<HTML
+		$jqueryScript = <<< HTML
 <script type="text/javascript">
     jQuery(document).ready(function() {
         jQuery("span.external-link").each(function(i, el) {
@@ -105,7 +105,7 @@ HTML;
 
 		$content = preg_replace_callback('#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s', 'static::excludeBlocks', $content);
 
-		$regex = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^>]*)>(?P<anchor>.*?)<\/a>/ius';
+		$regex = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^<>]*)>(?P<anchor>.*?)<\/a>/ius';
 		$content = preg_replace_callback($regex, array($this, 'replace'), $content);
 
 		if (is_array(static::$blocks) && !empty(static::$blocks))
