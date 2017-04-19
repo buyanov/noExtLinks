@@ -300,15 +300,39 @@ HTML;
 		$isExcluded = false;
 		$domain = $uri->toString(array('host', 'port'));
 
-		if (!empty($domain) && isset($this->whiteList[$domain]))
+		if (!empty($domain))
 		{
-			$eUri = $this->whiteList[$domain];
-
-			if (($eUri->getScheme() == '*' || ($uri->getScheme() == $eUri->getScheme()))
-				&& ((strpos($eUri->getHost(), '*.') !== false) || ($uri->getHost() == $eUri->getHost()))
-				&& ((strpos($eUri->getPath(), '/') === 0) || ($uri->getPath() == $eUri->getPath())))
+			foreach ($this->whiteList as $eUri)
 			{
-				$isExcluded = true;
+				$regex = [];
+
+				if ($eUri->getScheme() === '*')
+				{
+					$regex[] = 'http[s]?\://';
+				}
+				else
+				{
+					$regex[] = $eUri->getScheme() . '\://';
+				}
+
+				if ($host = $eUri->toString(array('host', 'port')))
+				{
+					$host    = preg_quote($host);
+					$regex[] = str_replace('\*', '[\w-]+', $host);
+				}
+
+				if ($path = $eUri->getPath())
+				{
+					$path    = preg_quote($path);
+					$regex[] = str_replace('\*', '[\w-\~\:\.\/]+', $path);
+				}
+
+				$regex = '~^' . implode('', $regex) . '$~iU';
+
+				if (preg_match($regex, $uri->toString(array('scheme', 'user', 'pass', 'host', 'port', 'path'))))
+				{
+					$isExcluded = true;
+				}
 			}
 		}
 
