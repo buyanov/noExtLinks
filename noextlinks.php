@@ -324,7 +324,7 @@ HTML;
 				if ($path = $eUri->getPath())
 				{
 					$path    = preg_quote($path);
-					$regex[] = str_replace('\*', '[\w-\~\:\.\/]+', $path);
+					$regex[] = str_replace('/\*', '(\/[\w-\~\:\.\/]*|)', $path);
 				}
 
 				$regex = '~^' . implode('', $regex) . '$~iU';
