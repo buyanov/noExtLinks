@@ -413,21 +413,26 @@ HTML;
 	 */
 	private function createWhiteList()
 	{
+		$theDomain = new Uri(JUri::getInstance());
+		$theDomain->setScheme('*');
+		$theDomain->setPath('/*');
+		$this->whiteList += array($theDomain->toString(array('host', 'port')) => $theDomain);
+
 		$whiteList = $this->params->get('whitelist', array());
 
 		if (!is_array($whiteList))
 		{
 			$whiteList = array_unique(explode("\n", $whiteList));
-		}
 
-		if (!empty($whiteList))
-		{
-			foreach ($whiteList as $url)
+			if (!empty($whiteList))
 			{
-				if (trim($url))
+				foreach ($whiteList as $url)
 				{
-					$uri = new Uri(trim($url));
-					$this->whiteList += array(trim($url) => $uri);
+					if (trim($url))
+					{
+						$uri = new Uri(trim($url));
+						$this->whiteList += $this->createUri($uri->getScheme(), $uri->getHost(), $uri->getPath());
+					}
 				}
 			}
 		}
@@ -438,11 +443,6 @@ HTML;
 		{
 			$domains = array_map("static::createUri", $exDomains['scheme'], $exDomains['host'], $exDomains['path']);
 		}
-
-		$theDomain = new Uri(JUri::getInstance());
-		$theDomain->setScheme('*');
-		$theDomain->setPath('/*');
-		$this->whiteList += array($theDomain->toString(array('host', 'port')) => $theDomain);
 
 		if (!empty($domains) && is_array($domains))
 		{
