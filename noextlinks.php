@@ -38,12 +38,28 @@ class PlgSystemNoExtLinks extends JPlugin
 	protected $whiteList = array();
 
 	/**
+	 * Array of domains for remove
+	 *
+	 * @var $removeList array
+	 * @since 1.0
+	 */
+	protected $removeList = array();
+
+	/**
 	 * Array of excluded html blocks
 	 *
 	 * @var $blocks array
 	 * @since 1.0
 	 */
 	protected static $blocks;
+
+	/**
+	 * Redirect page flag
+	 *
+	 * @var $useRedirectPage boolean
+	 * @since 1.0
+	 */
+	protected $useRedirectPage;
 
 	/**
 	 * Constructor
@@ -59,7 +75,37 @@ class PlgSystemNoExtLinks extends JPlugin
 	{
 		parent::__construct($subject, $config);
 
+		$this->useRedirectPage = $this->params->get('use_redirect_page', false);
+
 		$this->createWhiteList();
+		$this->createRemoveList();
+	}
+
+	/**
+	 * Method on Before render
+	 *
+	 * @return boolean
+	 * @since 1.7.11
+	 */
+	public function onBeforeRender()
+	{
+		if (!$this->useRedirectPage)
+		{
+			return true;
+		}
+
+		$currentItemId      = (int) $this->app->input->get('Itemid');
+		$redirectItemId     = (int) $this->params->get('redirect_page');
+		$redirectUrl        = $this->app->input->get('url', null, 'raw');
+		$redirectTimeout    = (int) $this->params->get('redirect_timeout', 5);
+
+		if ($currentItemId && $redirectItemId && $currentItemId == $redirectItemId && $redirectUrl)
+		{
+			$doc = $this->app->getDocument();
+			$doc->setMetaData('refresh', $redirectTimeout . '; ' . rawurldecode($redirectUrl), 'http-equiv');
+		}
+
+		return true;
 	}
 
 	/**
@@ -165,6 +211,11 @@ HTML;
 			return $text;
 		}
 
+		if ($this->isRemovedUri($uri))
+		{
+			return '';
+		}
+
 		if ($this->isExcludedUri($uri))
 		{
 			return $text;
@@ -172,7 +223,7 @@ HTML;
 
 		$text = $this->link($anchor, $args);
 
-		if ($this->params->get('noindex'))
+		if ($this->params->get('noindex') && !$this->useRedirectPage)
 		{
 			$text = '<!--noindex-->' . $text . '<!--/noindex-->';
 		}
@@ -211,14 +262,14 @@ HTML;
 	/**
 	 * Method for create Uri string from parts
 	 *
-	 * @param   string  $scheme  Uri scheme
 	 * @param   string  $host    Uri host
+	 * @param   string  $scheme  Uri scheme
 	 * @param   string  $path    Uri path
 	 *
 	 * @return  array
 	 * @since 1.0
 	 */
-	protected static function createUri($scheme, $host, $path)
+	protected static function createUri($host, $scheme = null, $path = null)
 	{
 		$uri = new Uri;
 		$uri->setScheme($scheme ?: '*');
@@ -431,7 +482,7 @@ HTML;
 					if (trim($url))
 					{
 						$uri = new Uri(trim($url));
-						$this->whiteList += $this->createUri($uri->getScheme(), $uri->getHost(), $uri->getPath());
+						$this->whiteList += $this->createUri($uri->getHost(), $uri->getScheme(), $uri->getPath());
 					}
 				}
 			}
@@ -441,7 +492,7 @@ HTML;
 
 		if (!empty($exDomains) && is_array($exDomains))
 		{
-			$domains = array_map("static::createUri", $exDomains['scheme'], $exDomains['host'], $exDomains['path']);
+			$domains = array_map("static::createUri", $exDomains['host'], $exDomains['scheme'], $exDomains['path']);
 		}
 
 		if (!empty($domains) && is_array($domains))
@@ -504,7 +555,7 @@ HTML;
 	private function link($anchor, $args)
 	{
 		$args['class'] = array('external-link');
-		$args['rel'] = $this->params->get('nofollow');
+
 		$args['target'] = $this->params->get('blank');
 		$anchorText = trim(strip_tags($anchor));
 
@@ -516,7 +567,16 @@ HTML;
 
 		if ($this->params->get('replace_anchor') && $anchorText == $anchor)
 		{
-			$anchor = $args['href'];
+			if ($this->params->get('replace_anchor_host'))
+			{
+				$uri = new Uri($args['href']);
+				$anchor = $uri->getHost();
+			}
+			else
+			{
+				$anchor = $args['href'];
+			}
+
 			$args['class'][] = '--href-replaced';
 		}
 
@@ -526,6 +586,16 @@ HTML;
 		}
 
 		$args = array_filter($args);
+
+		if ($this->useRedirectPage)
+		{
+			$args['class'][] = '--internal-redirect';
+			$args['href'] = $this->getRedirectUri($args['href']);
+		}
+		else
+		{
+			$args['rel'] = $this->params->get('nofollow');
+		}
 
 		$props = '';
 
@@ -542,5 +612,67 @@ HTML;
 		$tagName = $useJS ? 'span' : 'a';
 
 		return '<' . $tagName . ' ' . $props . '>' . $anchor . '</' . $tagName . '>';
+	}
+
+	/**
+	 * Method for create remove domains list
+	 *
+	 * @return  void
+	 * @since 1.7.10
+	 */
+	private function createRemoveList()
+	{
+		$this->removeList = null;
+
+		$rmDomains = array_filter(json_decode($this->params->get('removed_domains'), true));
+
+		if (!empty($rmDomains) && is_array($rmDomains))
+		{
+			$this->removeList = call_user_func_array("array_merge", array_map("static::createUri", $rmDomains['host']));
+		}
+	}
+
+	/**
+	 * Check the URI for remove.
+	 *
+	 * @param   Uri  $uri  Uri object to be checked.
+	 *
+	 * @return  boolean
+	 * @since   1.7.10
+	 */
+	private function isRemovedUri($uri)
+	{
+		$domain = $uri->toString(array('host'));
+
+		return !empty($domain) && !empty($this->removeList) && key_exists($domain, $this->removeList);
+	}
+
+	/**
+	 * Create redirect page Url
+	 *
+	 * @param   string  $href  string
+	 *
+	 * @return  string
+	 * @since   1.7.11
+	 */
+	private function getRedirectUri($href)
+	{
+
+		$base   = $this->params->get('absolutize') ? rtrim(JUri::base(), '/') : '';
+		$item   = $this->app->getMenu()->getItem($this->params->get('redirect_page'));
+
+		if ($href && $item)
+		{
+			$lang = '';
+
+			if ($item->language !== '*' && JLanguageMultilang::isEnabled())
+			{
+				$lang = '&lang=' . $item->language;
+			}
+
+			return $base . JRoute::_('index.php?Itemid=' . $item->id . $lang . '&url=' . $href, true);
+		}
+
+		return $href;
 	}
 }
