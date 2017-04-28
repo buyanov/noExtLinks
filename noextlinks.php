@@ -624,7 +624,7 @@ HTML;
 	{
 		$this->removeList = null;
 
-		$rmDomains = array_filter(json_decode($this->params->get('removed_domains'), true));
+		$rmDomains = json_decode($this->params->get('removed_domains'), true);
 
 		if (!empty($rmDomains) && is_array($rmDomains))
 		{
