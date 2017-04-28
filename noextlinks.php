@@ -626,7 +626,7 @@ HTML;
 
 		$rmDomains = json_decode($this->params->get('removed_domains'), true);
 
-		if (!empty($rmDomains) && is_array($rmDomains))
+		if (!empty($rmDomains) && is_array($rmDomains) && isset($rmDomains['host']) && !empty($rmDomains['host']))
 		{
 			$this->removeList = call_user_func_array("array_merge", array_map("static::createUri", $rmDomains['host']));
 		}
