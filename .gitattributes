@@ -8,3 +8,4 @@
 /phpunit.xml        export-ignore
 /vendor             export-ignore
 /tests              export-ignore
+/src                export-ignore

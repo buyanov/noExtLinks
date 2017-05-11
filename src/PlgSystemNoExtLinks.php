@@ -13,7 +13,6 @@ defined('_JEXEC') or die;
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
-use Joomla\Registry\Registry;
 
 /**
  * Class PlgSystemNoExtLinks
@@ -74,7 +73,6 @@ class PlgSystemNoExtLinks extends JPlugin
 	 */
 	public function __construct($subject, array $config = array())
 	{
-		$this->autoloadLanguage = true;
 		parent::__construct($subject, $config);
 
 		$this->useRedirectPage = $this->params->get('use_redirect_page', false);
@@ -109,90 +107,6 @@ class PlgSystemNoExtLinks extends JPlugin
 
 		return true;
 	}
-
-	/**
-	 * Method on render module
-	 *
-	 * @param   mixed  $module  The module data.
-	 *
-	 * @return boolean
-	 * @since 1.8.3
-	 */
-	public function onRenderModule(&$module)
-	{
-
-		if ($this->app->isAdmin())
-		{
-			return true;
-		}
-
-		$params = new Registry($module->params);
-
-		if ($params->get('exclude_content'))
-		{
-			$module->content = '<!-- extlinks -->' . $module->content . '<!-- /extlinks -->';
-		}
-
-		return true;
-	}
-
-	/**
-	 * Prepare form.
-	 *
-	 * @param   JForm  $form  The form to be altered.
-	 *
-	 * @return  boolean
-	 *
-	 * @since	1.8.3
-	 */
-	public function onContentPrepareForm($form)
-	{
-		if ($this->app->isSite())
-		{
-			return true;
-		}
-
-		// Check we have a form.
-		if (!($form instanceof JForm))
-		{
-			$this->_subject->setError('JERROR_NOT_A_FORM');
-
-			return false;
-		}
-
-		if ($form->getName() !== 'com_modules.module')
-		{
-			return true;
-		}
-
-		$form->load('
-			<form>
-				<fields name="params">
-					<fieldset
-						name="noextlinks"
-						label="PLG_SYSTEM_NOEXTLINKS_FIELDSET_LABEL"
-						description="PLG_SYSTEM_NOEXTLINKS_FIELDSET_DESC"
-					>
-						<field
-							name="exclude_content"
-							type="radio"
-							label="PLG_SYSTEM_NOEXTLINKS_EXCLUDE_CONTENT_LABEL"
-							description="PLG_SYSTEM_NOEXTLINKS_EXCLUDE_CONTENT_DESC"
-							class="btn-group btn-group-yesno"
-							default="0"
-							>
-							<option value="1">JYES</option>
-							<option value="0">JNO</option>
-						</field>
-					</fieldset>
-				</fields>
-			</form>
-		');
-
-
-		return true;
-	}
-
 
 	/**
 	 * Method on After render
