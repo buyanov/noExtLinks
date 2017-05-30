@@ -189,7 +189,6 @@ class PlgSystemNoExtLinks extends JPlugin
 			</form>
 		');
 
-
 		return true;
 	}
 
@@ -218,7 +217,9 @@ class PlgSystemNoExtLinks extends JPlugin
 </script></body>
 HTML;
 
-		if ($this->app->isAdmin())
+		$doc = $this->app->getDocument();
+
+		if ($this->app->isAdmin() || $doc->getType() !== 'html')
 		{
 			return true;
 		}
