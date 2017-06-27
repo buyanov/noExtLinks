@@ -638,7 +638,8 @@ HTML;
 	 */
 	private function link($anchor, $args)
 	{
-		$args['class'] = array('external-link');
+        $args['class'] = ($args['class'] ? $args['class'] .' ' : '');
+        $args['class'] .= 'external-link';
 
 		$args['target'] = $this->params->get('blank');
 		$anchorText = trim(strip_tags($anchor));
@@ -646,7 +647,7 @@ HTML;
 		if ($this->params->get('settitle') && !isset($args['title']) && $anchorText)
 		{
 			$args['title'] = $anchorText;
-			$args['class'][] = '--set-title';
+			$args['class'][] .= '--set-title';
 		}
 
 		if ($this->params->get('replace_anchor') && $anchorText == $anchor)
@@ -661,19 +662,19 @@ HTML;
 				$anchor = $args['href'];
 			}
 
-			$args['class'][] = '--href-replaced';
+			$args['class'][] .= '--href-replaced';
 		}
 
 		if ($useJS = $this->params->get('usejs'))
 		{
-			$args['class'][] = 'js-modify';
+			$args['class'][] .= 'js-modify';
 		}
 
 		$args = array_filter($args);
 
 		if ($this->useRedirectPage)
 		{
-			$args['class'][] = '--internal-redirect';
+			$args['class'][] .= '--internal-redirect';
 			$args['href'] = $this->getRedirectUri($args['href']);
 		}
 		else
