@@ -1,15 +1,16 @@
 {
+  "name": "buyanov/noextlinks",
+  "description": "This plugin hides external links",
+  "license": "MIT",
   "require"    : {
-    "php": ">=5.3.10"
+    "php": ">=5.6",
+    "ext-json": "*"
   },
   "require-dev": {
-    "codeception/codeception": "^2.2",
-    "joomla-projects/joomla-browser": "v3.6.5.1",
-    "consolidation/robo": "^1.0.0",
-    "joomla-projects/robo": "~0",
-    "joomla-projects/selenium-server-standalone": "v3.1.0",
-    "fzaninotto/faker": "^1.6",
-    "joomla-projects/jorobo": "~0.6",
-    "behat/gherkin": "^4.4.1"
+    "squizlabs/php_codesniffer": "3.*",
+    "consolidation/robo": "^1.0.0"
+  },
+  "config": {
+    "bin-dir": "scripts"
   }
 }
