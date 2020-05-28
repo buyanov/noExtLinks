@@ -21,4 +21,4 @@ jobs:
         run: composer install --prefer-dist --no-progress
 
       - name: PHP Code Sniffer
-          run: ./scripts/robo run:phpcs
+        run: ./scripts/robo run:phpcs
