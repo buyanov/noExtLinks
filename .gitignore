@@ -538,3 +538,5 @@
 
 /vendor/
 tests/_output/*
+
+composer.phar
