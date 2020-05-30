@@ -4,6 +4,7 @@ on:
       - 'v*'
 
 name: Build & Release
+jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
