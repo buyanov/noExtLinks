@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
       - name: build
         run: ./scripts/robo build
   release:
