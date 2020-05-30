@@ -21,9 +21,11 @@ class RoboFile extends \Robo\Tasks
 
     public function build()
     {
-        $this->taskPack('noextlinks.zip')
+        $this->_mkdir('dist');
+
+        $this->taskPack('dist/noextlinks.zip')
             ->addFile('noextlinks.php', 'src/PlgSystemNoExtLinks.php')
-            ->add('noextlinks.xml')
+            ->addFile('noextlinks.xml', 'src/noextlinks.xml')
             ->add('language')
             ->run();
     }

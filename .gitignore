@@ -540,3 +540,5 @@
 tests/_output/*
 
 composer.phar
+/scripts/
+/dist/
