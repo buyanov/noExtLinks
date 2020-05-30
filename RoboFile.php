@@ -22,12 +22,12 @@ class RoboFile extends \Robo\Tasks
     public function build()
     {
         $this->taskFilesystemStack()
-            ->mkdir('dist')
-            ->copy('src/PlgSystemNoExtLinks.php', 'dist/noextlinks.php', true)
-            ->copy('src/noextlinks.xml', 'dist/noextlinks.xml', true)
+            ->mkdir('dist/package')
+            ->copy('src/PlgSystemNoExtLinks.php', 'dist/package/noextlinks.php', true)
+            ->copy('src/noextlinks.xml', 'dist/package/noextlinks.xml', true)
             ->run();
 
-        $this->_copyDir('language', 'dist/language');
+        $this->_copyDir('language', 'dist/package/language');
     }
 
     public function zip()
