@@ -27,6 +27,6 @@ jobs:
         uses: Roang-zero1/github-upload-release-artifacts-action@master
         with:
           args:
-            - dist/noextlinks.zip
+          - dist/noextlinks.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
