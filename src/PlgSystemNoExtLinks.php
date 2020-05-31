@@ -1,6 +1,5 @@
 <?php
 namespace buyanov\noextlinks;
-
 /**
  * @package     Joomla.plugin
  * @subpackage  System.noextlinks
@@ -16,6 +15,10 @@ use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
 
+if (!class_exists('PlgSystemNoExtLinks')) {
+    \JLoader::registerAlias('PlgSystemNoExtLinks', 'buyanov\noextlinks\PlgSystemNoExtLinks');
+}
+
 /**
  * Class PlgSystemNoExtLinks
  *
@@ -26,7 +29,7 @@ class PlgSystemNoExtLinks extends \JPlugin
     /**
      * Object of Joomla! application class
      *
-     * @var $app JApplicationCms
+     * @var $app \JApplicationCms
      * @since 1.0
      */
     protected $app;
@@ -193,9 +196,9 @@ HTML;
         }
 
         $anchor = $matches['anchor'];
-        $base = JUri::root();
+        $base = \JUri::root();
         $href = $matches['href'];
-        $args = JUtility::parseAttributes($matches['args']);
+        $args = \JUtility::parseAttributes($matches['args']);
         $uri = new Uri($href);
 
         if (empty($anchor) || (!$uri->getHost() && $uri->getScheme())) {
@@ -205,7 +208,7 @@ HTML;
         if ($this->isRelativeUri($uri)) {
             if ($this->params->get('absolutize')) {
                 unset($args['href']);
-                $text = JHTML::link(rtrim($base, '/') . $href, $anchor, $args);
+                $text = \JHTML::link(rtrim($base, '/') . $href, $anchor, $args);
             }
 
             return $text;
@@ -443,7 +446,7 @@ HTML;
      */
     private function createWhiteList()
     {
-        $theDomain = new Uri(JUri::getInstance());
+        $theDomain = new Uri(\JUri::getInstance());
         $theDomain->setScheme('*');
         $theDomain->setPath('/*');
         $this->whiteList += array($theDomain->toString(array('host', 'port')) => $theDomain);
@@ -501,11 +504,11 @@ HTML;
             return null;
         }
 
-        if (!JLoader::import('models.article', JPATH_COMPONENT_SITE)) {
+        if (!\JLoader::import('models.article', JPATH_COMPONENT_SITE)) {
             return null;
         }
 
-        $articleModel = new ContentModelArticle();
+        $articleModel = new \ContentModelArticle();
         $currentArticle = $articleModel->getItem();
 
         return $currentArticle ?: null;
@@ -616,19 +619,20 @@ HTML;
      */
     private function getRedirectUri($href)
     {
-        $base  = $this->params->get('absolutize') ? rtrim(JUri::base(), '/') : '';
+        $base  = $this->params->get('absolutize') ? rtrim(\JUri::base(), '/') : '';
         $item  = $this->app->getMenu()->getItem($this->params->get('redirect_page'));
 
         if ($href && $item) {
             $lang = '';
 
-            if ($item->language !== '*' && JLanguageMultilang::isEnabled()) {
+            if ($item->language !== '*' && \JLanguageMultilang::isEnabled()) {
                 $lang = '&lang=' . $item->language;
             }
 
-            return $base . JRoute::_('index.php?Itemid=' . $item->id . $lang . '&url=' . $href, true);
+            return $base . \JRoute::_('index.php?Itemid=' . $item->id . $lang . '&url=' . $href, true);
         }
 
         return $href;
     }
 }
+
