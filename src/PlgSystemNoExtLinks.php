@@ -1,5 +1,6 @@
 <?php
 namespace buyanov\noextlinks;
+
 /**
  * @package     Joomla.plugin
  * @subpackage  System.noextlinks
@@ -635,4 +636,3 @@ HTML;
         return $href;
     }
 }
-
