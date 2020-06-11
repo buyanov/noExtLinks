@@ -17,7 +17,7 @@ jobs:
         run: composer install --prefer-dist --no-progress
       - shell: bash
         run: |
-          tar -zcf vendor.tgz ./vendor ./scripts
+          tar -zcf vendor.tgz ./vendor ./scripts ./composer.lock
       - name: Upload result vendors
         uses: actions/upload-artifact@v1
         with:
@@ -34,7 +34,7 @@ jobs:
           name: artifacts
       - shell: bash
         run: |
-          tar -zxf ./artifacts/vendor.tgz
+          tar -zxf ./artifacts/vendor.tgz && ls -la
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
 
