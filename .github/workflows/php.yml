@@ -21,7 +21,7 @@ jobs:
       - name: Upload result vendors
         uses: actions/upload-artifact@v1
         with:
-          name: vendor.tgz
+          name: artifacts
           path: vendor.tgz
 
   codestyle:
@@ -31,10 +31,10 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: vendor.tgz
+          name: vendor
       - shell: bash
         run: |
-          tar -zxf vendor.tgz
+          tar -zxf artifacts/vendor.tgz
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
 
@@ -45,9 +45,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: vendor.tgz
+          name: vendor
       - shell: bash
         run: |
-          tar -zxf vendor.tgz
+          tar -zxf artifacts/vendor.tgz
       - name: PHP Unit
         run: ./scripts/robo run:phpunit
