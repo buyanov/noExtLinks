@@ -21,7 +21,7 @@ jobs:
       - name: Upload result vendors
         uses: actions/upload-artifact@v1
         with:
-          name: vendor
+          name: vendor.tgz
           path: vendor.tgz
 
   codestyle:
@@ -31,7 +31,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: vendor
+          name: vendor.tgz
       - shell: bash
         run: |
           tar -zxf vendor.tgz
@@ -45,7 +45,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: vendor
+          name: vendor.tgz
       - shell: bash
         run: |
           tar -zxf vendor.tgz
