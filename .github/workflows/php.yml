@@ -15,11 +15,14 @@ jobs:
         run: composer validate
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
+      - shell: bash
+        run: |
+          tar -zcf vendor.tgz ./vendor ./scripts
       - name: Upload result vendors
         uses: actions/upload-artifact@v1
         with:
           name: vendor
-          path: vendor
+          path: vendor.tgz
 
   codestyle:
     needs: install
@@ -29,6 +32,9 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: vendor
+      - shell: bash
+          run: |
+            tar -zxf vendor.tgz
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
 
@@ -40,5 +46,8 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: vendor
+      - shell: bash
+          run: |
+            tar -zxf vendor.tgz
       - name: PHP Unit
         run: ./scripts/robo run:phpunit
