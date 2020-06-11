@@ -31,7 +31,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: vendor
+          name: artifacts
       - shell: bash
         run: |
           tar -zxf artifacts/vendor.tgz
@@ -45,7 +45,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: vendor
+          name: artifacts
       - shell: bash
         run: |
           tar -zxf artifacts/vendor.tgz
