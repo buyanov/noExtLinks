@@ -16,12 +16,12 @@ class RoboFile extends \Robo\Tasks
 
     public function runPhpcs()
     {
-        $this->_exec('scripts/phpcs' . ' --standard=PSR2 ' . __DIR__ . '/src');
+        $this->_exec('scripts/phpcs --standard=PSR2 ' . __DIR__ . '/src');
     }
 
     public function runPhpunit()
     {
-        $this->_exec('scripts/phpunit' . ' --testdox');
+        $this->_exec('scripts/phpunit --testdox');
     }
 
     public function build()
