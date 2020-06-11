@@ -34,12 +34,12 @@ jobs:
           name: artifacts
       - shell: bash
         run: |
-          tar -zxf artifacts/vendor.tgz
+          tar -zxf ./artifacts/vendor.tgz
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
 
   tests:
-    needs: codestyle
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
@@ -48,6 +48,6 @@ jobs:
           name: artifacts
       - shell: bash
         run: |
-          tar -zxf artifacts/vendor.tgz
+          tar -zxf ./artifacts/vendor.tgz
       - name: PHP Unit
         run: ./scripts/robo run:phpunit
