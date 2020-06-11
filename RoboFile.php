@@ -30,9 +30,11 @@ class RoboFile extends \Robo\Tasks
             ->mkdir('dist/noextlinks')
             ->copy('src/PlgSystemNoExtLinks.php', 'dist/noextlinks/noextlinks.php', true)
             ->copy('src/noextlinks.xml', 'dist/noextlinks/noextlinks.xml', true)
+            ->copy('src/noextlinks.js', 'dist/noextlinks/noextlinks.js', true)
             ->run();
 
         $this->_copyDir('language', 'dist/noextlinks/language');
+        $this->_copyDir('src/Support', 'dist/noextlinks/Support');
     }
 
     public function zip()
@@ -42,7 +44,9 @@ class RoboFile extends \Robo\Tasks
         $this->taskPack('dist/noextlinks.zip')
             ->addFile('noextlinks.php', 'src/PlgSystemNoExtLinks.php')
             ->addFile('noextlinks.xml', 'src/noextlinks.xml')
-            ->add('language')
+            ->addFile('noextlinks.js', 'src/noextlinks.js')
+            ->addDir('language','language')
+            ->addDir('Support', 'src/Support')
             ->run();
     }
 

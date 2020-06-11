@@ -59,7 +59,7 @@ class LinkTest extends TestCase
 
     public function testAddArgs(): void
     {
-        $this->link->addArgs(['target' => '_blank']);
+        $this->link->addArgs(['target' => '_blank', 'href' => 'https://google.com']);
         $expected = '<a href="https://saity74.ru" target="_blank">saity74</a>';
         $this->assertEquals($expected, (string) $this->link);
     }

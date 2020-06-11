@@ -6,7 +6,7 @@ namespace Buyanov\NoExtLinks;
  * @subpackage  System.noextlinks
  *
  * @author      Buyanov Danila <info@saity74.ru>
- * @copyright   (C) 2012-2020 Saity74 LLC. All Rights Reserved.
+ * @copyright   (C) 2012-2020 Buyanov Danila. All Rights Reserved.
  * @license     GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
  **/
 
@@ -132,21 +132,9 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     public function onAfterRender()
     {
-        $jqueryScript = <<< HTML
-<script type="text/javascript">
-    jQuery(document).ready(function() {
-        jQuery("span.external-link").each(function(i, el) {
-            var data = jQuery(el).data();
-            jQuery(el).wrap(jQuery("<a>").attr({
-                "href" : data.href,
-                "title" : data.title,
-                "target" : data.target,
-                "rel" : data.rel
-            }).addClass(jQuery(el).prop('class')))
-        })
-    })
-</script></body>
-HTML;
+        $jqueryScript = '<script type="text/javascript">'
+            . file_get_contents(__DIR__ . '/noextlinks.js')
+            . '</script></body>';
 
         if ($this->app->isAdmin()) {
             return true;

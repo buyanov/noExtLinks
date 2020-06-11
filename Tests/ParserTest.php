@@ -7,13 +7,6 @@ use PHPUnit\Framework\TestCase;
 class ParserTest extends TestCase
 {
 
-    private $content;
-
-    public function setUp(): void
-    {
-        $this->content = file_get_contents(__DIR__ . '/content.html');
-    }
-
     public function invokeMethod(&$object, $methodName, array $parameters = array())
     {
         $reflection = new \ReflectionClass(get_class($object));
@@ -80,6 +73,11 @@ class ParserTest extends TestCase
                 [],
                 'Test <a href="/test">link</a> with text'
             ],
+            "Simple internal link absolutize=on" => [
+                'Test <a href="/test">link</a> with text',
+                ['absolutize' => "1"],
+                'Test <a href="http://localhost/test">link</a> with text'
+            ],
             "External link without anchor" => [
                 'Test <a href="https://google.com"></a> with text',
                 [],
@@ -130,22 +128,41 @@ class ParserTest extends TestCase
                 ['noindex' => '0'],
                 'Test <a href="https://google.com" title="link title" target="_blank" rel="nofollow" class="my-custom-class external-link">google</a> with text'
             ],
-            "External link with noindex=off nofollow=off" => [
+            "External link with nofollow=off" => [
                 'Test <a href="https://google.com" title="link title" class="my-custom-class">google</a> with text',
                 ['noindex' => '0', 'nofollow' => "0"],
                 'Test <a href="https://google.com" title="link title" target="_blank" class="my-custom-class external-link">google</a> with text'
             ],
-            "External link with noindex=off nofollow=off settitle=off" => [
+            "External link with settitle=off" => [
                 'Test <a href="https://google.com" title="link title" class="my-custom-class">google</a> with text',
                 ['noindex' => '0', 'nofollow' => "0", "settitle" => "0"],
                 'Test <a href="https://google.com" title="link title" target="_blank" class="my-custom-class external-link">google</a> with text'
             ],
-            "External link with noindex=off nofollow=off settitle=on" => [
+            "External link with settitle=on" => [
                 'Test <a href="https://google.com" class="my-custom-class">google</a> with text',
                 ['noindex' => '0', 'nofollow' => "0", "settitle" => "1"],
                 'Test <a href="https://google.com" target="_blank" title="google" class="my-custom-class external-link --set-title">google</a> with text'
             ],
-
+            "External link with blank=off" => [
+                'Test <a href="https://google.com" class="my-custom-class">google</a> with text',
+                ['noindex' => '0', 'nofollow' => "0", "settitle" => "0", "blank" => "0"],
+                'Test <a href="https://google.com" class="my-custom-class external-link">google</a> with text'
+            ],
+            "External link with replace_anchor=on" => [
+                'Test <a href="https://google.com" class="my-custom-class">google</a> with text',
+                ['replace_anchor' => '1'],
+                'Test <!--noindex--><a href="https://google.com" target="_blank" title="google" rel="nofollow" class="my-custom-class external-link --set-title --href-replaced">https://google.com</a><!--/noindex--> with text'
+            ],
+            "External link with replace_anchor=on and replace_anchor_host=on" => [
+                'Test <a href="https://google.com" class="my-custom-class">google</a> with text',
+                ['replace_anchor' => '1', 'replace_anchor_host' => '1'],
+                'Test <!--noindex--><a href="https://google.com" target="_blank" title="google" rel="nofollow" class="my-custom-class external-link --set-title --href-replaced">google.com</a><!--/noindex--> with text'
+            ],
+            "External link with usejs=on" => [
+                'Test <a href="https://google.com" class="my-custom-class">google</a> with text',
+                ['usejs' => '1'],
+                'Test <!--noindex--><span data-href="https://google.com" data-target="_blank" data-title="google" data-rel="nofollow" class="my-custom-class external-link --set-title js-modify">google</span><!--/noindex--> with text'
+            ],
         ];
     }
 }
