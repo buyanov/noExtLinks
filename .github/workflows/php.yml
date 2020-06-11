@@ -12,33 +12,33 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Validate composer.json and composer.lock
-          run: composer validate
+        run: composer validate
       - name: Install dependencies
-          run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress
       - name: Upload result vendors
-          uses: actions/upload-artifact@v1
-          with:
-            name: vendor
-            path: vendor
+        uses: actions/upload-artifact@v1
+        with:
+          name: vendor
+          path: vendor
 
   codestyle:
     needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-          uses: actions/download-artifact@v1
-          with:
-            name: vendor
+        uses: actions/download-artifact@v1
+        with:
+          name: vendor
       - name: PHP Code Sniffer
-          run: ./scripts/robo run:phpcs
+        run: ./scripts/robo run:phpcs
 
   tests:
     needs: codestyle
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-          uses: actions/download-artifact@v1
-          with:
-            name: vendor
+        uses: actions/download-artifact@v1
+        with:
+          name: vendor
       - name: PHP Unit
-          run: ./scripts/robo run:phpunit
+        run: ./scripts/robo run:phpunit
