@@ -140,5 +140,4 @@ class Link
 
         return "<$tag {$this->getProps($tag === 'a')}>$this->anchor</$tag>";
     }
-
 }
