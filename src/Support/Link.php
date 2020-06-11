@@ -49,6 +49,10 @@ class Link
 
     public function __set($name, $value)
     {
+        if ($name === 'class') {
+            return;
+        }
+
         $this->args[$name] = $value;
     }
 
@@ -80,11 +84,6 @@ class Link
 
     public function setArgs(array $args): Link
     {
-        if (isset($args['class']) && is_array($args['class'])) {
-            $this->class = $args['class'];
-            unset($args['class']);
-        }
-
         $this->args = $args;
 
         return $this;
@@ -92,13 +91,7 @@ class Link
 
     public function addArgs(array $args): Link
     {
-        if (isset($args['class']) && is_array($args['class'])) {
-            $this->class = array_merge($this->class, $args['class']);
-            unset($args['class']);
-            unset($this->args['class']);
-        }
-
-        $this->args = array_merge($this->args, $args);
+        $this->args = array_merge($this->args, array_diff_key($args, $this->args));
 
         return $this;
     }
@@ -108,13 +101,24 @@ class Link
         return implode(' ', $this->class);
     }
 
+    protected function filterArgs(): void
+    {
+        if (array_key_exists('class', $this->args)) {
+            $this->class = array_merge(explode(' ', $this->args['class']), $this->class);
+            unset($this->args['class']);
+        }
+
+        $this->args = array_filter($this->args);
+    }
+
     protected function getProps(bool $data = false): string
     {
         $prefix = $data ? '' : 'data-';
-        $args = $this->args;
+        $this->filterArgs();
 
         $props = [];
-        foreach ($args as $prop => $value) {
+
+        foreach ($this->args as $prop => $value) {
             if (null !== $value) {
                 $props[] = "{$prefix}{$prop}=\"$value\"";
             } else {

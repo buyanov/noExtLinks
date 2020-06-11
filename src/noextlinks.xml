@@ -3,14 +3,16 @@
 	<name>noextlinks</name>
 	<author>Buyanov Danila</author>
 	<creationDate>01 August 2012</creationDate>
-	<copyright>Copyright (C) 2005 - 2017 Buyanov Danila. All rights reserved.</copyright>
+	<copyright>Copyright (C) 2012 - 2020 Buyanov Danila. All rights reserved.</copyright>
 	<license>GNU/GPL v2 or later http://www.gnu.org/licenses/gpl-2.0.html</license>
 	<authorEmail>info@saity74.ru</authorEmail>
 	<authorUrl>www.saity74.ru</authorUrl>
-	<version>1.8.4</version>
+	<version>1.8.5</version>
 	<description>PLG_NOEXTLINKS_DESC</description>
 	<files>
 		<filename plugin="noextlinks">noextlinks.php</filename>
+		<filename>noextlinks.js</filename>
+		<folder>Support</folder>
 	</files>
 	<languages folder="language">
 		<language tag="en-GB">en-GB/en-GB.plg_system_noextlinks.ini</language>
@@ -236,6 +238,6 @@
 		</fields>
 	</config>
 	<updateservers>
-		<server type="extension" name="Saity74 LLC - GitLab">https://gitlab.s74.org/joomla/extensions/raw/master/plg_noextlinks/update.xml</server>
+		<server type="extension" name="Github">https://github.com/buyanov/noExtLinks/blob/master/manifest.xml</server>
 	</updateservers>
 </extension>

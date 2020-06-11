@@ -1,0 +1,1 @@
+jQuery(document).ready(function(){jQuery("span.external-link").each(function(e,r){var a=jQuery(r).data();jQuery(r).wrap(jQuery("<a>").attr({href:a.href,title:a.title,target:a.target,rel:a.rel}).addClass(jQuery(r).prop("class")))})});

@@ -101,29 +101,31 @@ class Parser
     {
         static::checkMatch($matches);
 
-        $text = $matches[0];
+        [$text, $pureArgs, $href, $anchor] = $matches;
 
-        if (StringHelper::strpos($matches['href'], '#') === 0) {
+        // If anchor for element on same page - ignore it
+        if (StringHelper::strpos($href, '#') === 0) {
             return $text;
         }
 
-        $anchor = $matches['anchor'];
-        $base = static::base();
-        $href = $matches['href'];
-        $args = static::parseAttributes($matches['args']);
+        $args = static::parseAttributes($pureArgs);
         $uri = new Uri($href);
 
-        // Filter "tel:", "whatsup::/send...", "skype:" etc
-        if ($this->isHttpUri($uri)) {
+        if ($this->isRelativeUri($uri)) {
+
+            if ($this->options->get('absolutize')) {
+                $newHref = rtrim(static::base(), '/') . $href;
+                $link = Link::create()->setAnchor($anchor)->setArgs($args);
+                $link->href = $newHref;
+
+                return $link;
+            }
+
             return $text;
         }
 
-        if ($this->isRelativeUri($uri)) {
-            if ($this->options->get('absolutize')) {
-                unset($args['href']);
-                $text = \JHTML::link(rtrim($base, '/') . $href, $anchor, $args);
-            }
-
+        // Filter "tel:", "whatsup://send...", "skype:" etc
+        if ($this->isHttpUri($uri)) {
             return $text;
         }
 
@@ -149,32 +151,28 @@ class Parser
     {
         $link = Link::create()
             ->setAnchor($anchor)
-            ->setArgs($args);
+            ->setArgs($args)
+            ->addClass('external-link');
 
-        if (isset($args['class'])) {
-            $class = explode(' ', $args['class']);
-            $link->addArgs(['class' => $class]);
+
+        if ($this->options->get('blank') !== '0') {
+            $link->target = $this->options->get('blank');
         }
 
-        $link->addClass('external-link');
-
-        $link->target = $this->options->get('blank');
         $anchorText = trim(strip_tags($anchor));
 
         if (!isset($args['title']) && $anchorText && $this->options->get('settitle')) {
-            $link->title = $anchorText;
             $link->addClass('--set-title');
+            $link->title = $anchorText;
         }
 
         if ($anchorText === $anchor && $this->options->get('replace_anchor')) {
-            if ($this->options->get('replace_anchor_host')) {
-                $uri = new Uri($args['href']);
-                $link->setAnchor($uri->getHost());
-            } else {
-                $link->setAnchor($args['href']);
-            }
-
             $link->addClass('--href-replaced');
+            $link->setAnchor($args['href']);
+
+            if ($this->options->get('replace_anchor_host')) {
+                $link->setAnchor((new Uri($args['href']))->getHost());
+            }
         }
 
         if ($this->options->get('usejs')) {
@@ -194,8 +192,8 @@ class Parser
             return (string) $link;
         }
 
-        if ($this->options->get('nofollow') === 'nofollow') {
-            $link->rel = 'nofollow';
+        if ($this->options->get('nofollow') !== '0') {
+            $link->rel = $this->options->get('nofollow');
         }
 
         return (string) $link;
@@ -333,6 +331,7 @@ class Parser
      */
     protected function isHttpUri(Uri $uri): bool
     {
-        return !$uri->getHost() || !in_array(strtolower($uri->getScheme()), ['http', 'https']);
+        return ($uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']))
+            || (!$uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']));
     }
 }
