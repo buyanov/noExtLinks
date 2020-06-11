@@ -22,3 +22,6 @@ jobs:
 
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
+
+      - name: PHP Unit
+        run: ./scripts/robo run:phpunit

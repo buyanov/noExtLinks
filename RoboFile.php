@@ -19,6 +19,11 @@ class RoboFile extends \Robo\Tasks
         $this->_exec('scripts/phpcs' . ' --standard=PSR2 ' . __DIR__ . '/src');
     }
 
+    public function runPhpunit()
+    {
+        $this->_exec('scripts/phpunit' . ' --testdox');
+    }
+
     public function build()
     {
         $this->taskFilesystemStack()

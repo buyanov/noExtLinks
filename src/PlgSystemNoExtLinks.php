@@ -1,23 +1,26 @@
 <?php
-namespace buyanov\noextlinks;
+namespace Buyanov\NoExtLinks;
 
 /**
  * @package     Joomla.plugin
  * @subpackage  System.noextlinks
  *
  * @author      Buyanov Danila <info@saity74.ru>
- * @copyright   (C) 2012-2019 Saity74 LLC. All Rights Reserved.
+ * @copyright   (C) 2012-2020 Saity74 LLC. All Rights Reserved.
  * @license     GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
  **/
 
 defined('_JEXEC') or die;
 
+use Buyanov\NoExtLinks\Support\Parser;
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
 
 if (!class_exists('PlgSystemNoExtLinks')) {
-    \JLoader::registerAlias('PlgSystemNoExtLinks', 'buyanov\noextlinks\PlgSystemNoExtLinks');
+    \JLoader::registerAlias('PlgSystemNoExtLinks', 'Buyanov\NoExtLinks\PlgSystemNoExtLinks');
+    require_once(__DIR__ . '/Support/Parser.php');
+    require_once(__DIR__ . '/Support/Link.php');
 }
 
 /**
@@ -41,7 +44,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      * @var $whiteList array
      * @since 1.0
      */
-    protected $whiteList = array();
+    protected $whiteList = [];
 
     /**
      * Array of domains for remove
@@ -49,7 +52,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      * @var $removeList array
      * @since 1.0
      */
-    protected $removeList = array();
+    protected $removeList = [];
 
     /**
      * Array of excluded html blocks
@@ -68,6 +71,14 @@ class PlgSystemNoExtLinks extends \JPlugin
     protected $useRedirectPage;
 
     /**
+     * Noindex wrapper flag
+     *
+     * @var $useRedirectPage boolean
+     * @since 1.0
+     */
+    protected $useNoIndexWrapper;
+
+    /**
      * Constructor
      *
      * @param   object  $subject  The object to observe
@@ -82,6 +93,7 @@ class PlgSystemNoExtLinks extends \JPlugin
         parent::__construct($subject, $config);
 
         $this->useRedirectPage = $this->params->get('use_redirect_page', false);
+        $this->useNoIndexWrapper = $this->params->get('noindex', true);
 
         $this->createWhiteList();
         $this->createRemoveList();
@@ -126,8 +138,8 @@ class PlgSystemNoExtLinks extends \JPlugin
         jQuery("span.external-link").each(function(i, el) {
             var data = jQuery(el).data();
             jQuery(el).wrap(jQuery("<a>").attr({
-                "href" : data.href, 
-                "title" : data.title, 
+                "href" : data.href,
+                "title" : data.title,
                 "target" : data.target,
                 "rel" : data.rel
             }).addClass(jQuery(el).prop('class')))
@@ -150,24 +162,10 @@ HTML;
             return true;
         }
 
-        $content = preg_replace_callback(
-            '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s',
-            'static::excludeBlocks',
-            $content
-        );
-
-        /* phpcs:ignore */
-        $regex = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^<>]*)>(?P<anchor>.*?)<\/a>/ius';
-        $content = preg_replace_callback($regex, array($this, 'replace'), $content);
-
-        if (is_array(static::$blocks) && !empty(static::$blocks)) {
-            static::$blocks = array_reverse(static::$blocks);
-            $content = preg_replace_callback(
-                '/<!-- noExternalLinks-White-Block -->/i',
-                'static::includeBlocks',
-                $content
-            );
-        }
+        Parser::create($content, $this->params)
+            ->prepare($this->whiteList, $this->removeList, [$this, 'getRedirectUri'])
+            ->parse()
+            ->finish();
 
         if ($this->params->get('usejs')) {
             $content = preg_replace('/<\/body>/i', $jqueryScript, $content);
@@ -176,88 +174,6 @@ HTML;
         $this->app->setBody($content);
 
         return true;
-    }
-
-    /**
-     * Method for replace links
-     *
-     * @param   array  $matches  Array with matched links
-     *
-     * @return  mixed|string
-     * @since 1.0
-     */
-    protected function replace($matches)
-    {
-        static::checkMatch($matches);
-
-        $text = $matches[0];
-
-        if (stripos($matches['href'], '#') === 0) {
-            return $text;
-        }
-
-        $anchor = $matches['anchor'];
-        $base = \JUri::root();
-        $href = $matches['href'];
-        $args = \JUtility::parseAttributes($matches['args']);
-        $uri = new Uri($href);
-
-        if (empty($anchor) || (!$uri->getHost() && $uri->getScheme())) {
-            return $text;
-        }
-
-        if ($this->isRelativeUri($uri)) {
-            if ($this->params->get('absolutize')) {
-                unset($args['href']);
-                $text = \JHTML::link(rtrim($base, '/') . $href, $anchor, $args);
-            }
-
-            return $text;
-        }
-
-        if ($this->isRemovedUri($uri)) {
-            return '';
-        }
-
-        if ($this->isExcludedUri($uri)) {
-            return $text;
-        }
-
-        $text = $this->link($anchor, $args);
-
-        if ($this->params->get('noindex') && !$this->useRedirectPage) {
-            $text = '<!--noindex-->' . $text . '<!--/noindex-->';
-        }
-
-        return $text;
-    }
-
-    /**
-     * Method for replace white blocks
-     *
-     * @param   array  $matches  Array of blocks
-     *
-     * @return  string
-     * @since 1.0
-     */
-    protected static function excludeBlocks($matches)
-    {
-        static::$blocks[] = $matches[1];
-
-        return '<!-- noExternalLinks-White-Block -->';
-    }
-
-    /**
-     * Method for return excluded blocks into content
-     *
-     * @return  string
-     * @since 1.0
-     */
-    protected static function includeBlocks()
-    {
-        $block = array_pop(static::$blocks);
-
-        return '<!-- extlinks -->' . $block . '<!-- /extlinks -->';
     }
 
     /**
@@ -298,90 +214,6 @@ HTML;
     }
 
     /**
-     * Check the buffer.
-     *
-     * @param   array  $match  Buffer to be checked.
-     *
-     * @return  void
-     * @since   1.7.5
-     */
-    private function checkMatch($match)
-    {
-        if ($match === null) {
-            switch (preg_last_error()) {
-                case PREG_BACKTRACK_LIMIT_ERROR:
-                    $message = 'PHP regular expression limit reached (pcre.backtrack_limit)';
-                    break;
-                case PREG_RECURSION_LIMIT_ERROR:
-                    $message = 'PHP regular expression limit reached (pcre.recursion_limit)';
-                    break;
-                case PREG_BAD_UTF8_ERROR:
-                    $message = 'Bad UTF8 passed to PCRE function';
-                    break;
-                default:
-                    $message = 'Unknown PCRE error calling PCRE function';
-            }
-
-            throw new RuntimeException($message);
-        }
-    }
-
-    /**
-     * Check the URI.
-     *
-     * @param   Uri  $uri  Uri object to be checked.
-     *
-     * @return  boolean
-     * @since   1.7.5
-     */
-    private function isRelativeUri($uri)
-    {
-        return (!$uri->toString(array('scheme', 'host', 'port')) && $uri->toString(array('path', 'query', 'fragment')));
-    }
-
-    /**
-     * Check the URI.
-     *
-     * @param   Uri  $uri  Uri object to be checked.
-     *
-     * @return  boolean
-     * @since   1.7.5
-     */
-    private function isExcludedUri($uri)
-    {
-        $isExcluded = false;
-        $domain = $uri->toString(array('host', 'port'));
-
-        if (!empty($domain)) {
-            foreach ($this->whiteList as $eUri) {
-                $regex = [];
-
-                if ($eUri->getScheme() === '*') {
-                    $regex[] = 'http[s]?\://';
-                } else {
-                    $regex[] = $eUri->getScheme() . '\://';
-                }
-
-                if ($host = $eUri->toString(array('host', 'port'))) {
-                    $regex[] = str_replace('\*', '[\w\-]+', $host);
-                }
-
-                if ($path = $eUri->getPath()) {
-                    $regex[] = str_replace('/\*', '(\/[\w\-\~\:\.\/]*|)', $path);
-                }
-
-                $regex = '~^' . implode('', $regex) . '$~iU';
-
-                if (preg_match($regex, $uri->toString(array('scheme', 'user', 'pass', 'host', 'port', 'path')))) {
-                    $isExcluded = true;
-                }
-            }
-        }
-
-        return $isExcluded;
-    }
-
-    /**
      * Method for get categories
      *
      * @return  array
@@ -389,8 +221,8 @@ HTML;
      */
     private function getExcludedMenuItems()
     {
-        $items = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_menu_items', '')), array());
-        $items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', array())));
+        $items = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_menu_items', '')), []);
+        $items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
 
         return $items;
     }
@@ -403,14 +235,19 @@ HTML;
      */
     private function checkMenuItem()
     {
-        $result = false;
-
-        if (($menu = $this->app->getMenu()) && ($activeItem = $menu->getActive())) {
-            $items = $this->getExcludedMenuItems();
-            $result = !empty($items) && is_array($items) && in_array($activeItem->id, $items, false);
+        $menu = $this->app->getMenu();
+        if (!$menu) {
+            return false;
         }
 
-        return $result;
+        $activeItem = $menu->getActive();
+        if (!$activeItem) {
+            return false;
+        }
+
+        $items = $this->getExcludedMenuItems();
+
+        return in_array($activeItem->id, $items, false);
     }
 
     /**
@@ -516,70 +353,6 @@ HTML;
     }
 
     /**
-     * Method for generate link
-     *
-     * @param   string  $anchor  Link anchor
-     * @param   array   $args    Array with link attributes
-     *
-     * @return  string
-     * @since   1.7.5
-     */
-    private function link($anchor, $args)
-    {
-        if (isset($args['class'])) {
-            $args['class'] = explode(' ', $args['class']);
-        }
-
-        $args['class'][] = 'external-link';
-
-        $args['target'] = $this->params->get('blank');
-        $anchorText = trim(strip_tags($anchor));
-
-        if ($this->params->get('settitle') && !isset($args['title']) && $anchorText) {
-            $args['title'] = $anchorText;
-            $args['class'][] = '--set-title';
-        }
-
-        if ($this->params->get('replace_anchor') && $anchorText == $anchor) {
-            if ($this->params->get('replace_anchor_host')) {
-                $uri = new Uri($args['href']);
-                $anchor = $uri->getHost();
-            } else {
-                $anchor = $args['href'];
-            }
-
-            $args['class'][] = '--href-replaced';
-        }
-
-        if ($useJS = $this->params->get('usejs')) {
-            $args['class'][] = 'js-modify';
-        }
-
-        $args = array_filter($args);
-
-        if ($this->useRedirectPage) {
-            $args['class'][] = '--internal-redirect';
-            $args['href'] = $this->getRedirectUri($args['href']);
-        } else {
-            $args['rel'] = $this->params->get('nofollow');
-        }
-
-        $props = '';
-
-        foreach ($args as $key => $value) {
-            $v = is_array($value) ? implode(' ', $value) : $value;
-            if ($useJS && $key !== 'class') {
-                $key = 'data-' . $key;
-            }
-            $props .= $key . '="' . $v . '" ';
-        }
-
-        $tagName = $useJS ? 'span' : 'a';
-
-        return '<' . $tagName . ' ' . $props . '>' . $anchor . '</' . $tagName . '>';
-    }
-
-    /**
      * Method for create remove domains list
      *
      * @return  void
@@ -596,21 +369,6 @@ HTML;
     }
 
     /**
-     * Check the URI for remove.
-     *
-     * @param   Uri  $uri  Uri object to be checked.
-     *
-     * @return  boolean
-     * @since   1.7.10
-     */
-    private function isRemovedUri($uri)
-    {
-        $domain = $uri->toString(array('host'));
-
-        return !empty($domain) && !empty($this->removeList) && array_key_exists($domain, $this->removeList);
-    }
-
-    /**
      * Create redirect page Url
      *
      * @param   string  $href  string
@@ -618,7 +376,7 @@ HTML;
      * @return  string
      * @since   1.7.11
      */
-    private function getRedirectUri($href)
+    public function getRedirectUri($href)
     {
         $base  = $this->params->get('absolutize') ? rtrim(\JUri::base(), '/') : '';
         $item  = $this->app->getMenu()->getItem($this->params->get('redirect_page'));

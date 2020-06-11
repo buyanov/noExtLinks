@@ -17,6 +17,10 @@ services:
         source: ./src/noextlinks.xml
         target: /var/www/html/plugins/system/noextlinks/noextlinks.xml
         consistency: delegated
+      - type: bind
+        source: ./src/Support
+        target: /var/www/html/plugins/system/noextlinks/Support
+        consistency: delegated
     environment:
       JOOMLA_DB_HOST: joomladb
       JOOMLA_DB_PASSWORD: example
