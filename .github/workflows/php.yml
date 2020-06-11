@@ -7,18 +7,51 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  install:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
-
       - name: Validate composer.json and composer.lock
         run: composer validate
-
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
+      - shell: bash
+        run: |
+          tar -zcf vendor.tgz ./vendor ./scripts ./composer.lock
+      - name: Upload result vendors
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifacts
+          path: vendor.tgz
 
+  codestyle:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: artifacts
+      - shell: bash
+        run: |
+          tar -zxf ./artifacts/vendor.tgz
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
+
+  tests:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: artifacts
+      - shell: bash
+        run: |
+          tar -zxf ./artifacts/vendor.tgz
+      - name: PHP Unit
+        run: ./scripts/robo run:phpunit

@@ -35,7 +35,7 @@
 					   description="PLG_SYSTEM_NOEXTLINKS_NOFOLLOW_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_NOFOLLOW_LABEL"
 				>
-					<option value="">JNO</option>
+					<option value="0">JNO</option>
 					<option value="nofollow">JYES</option>
 				</field>
 				<field name="settitle" type="radio"

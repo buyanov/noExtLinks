@@ -1,3 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="tests/unit/bootstrap.php" colors="false">
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/latest/phpunit.xsd"
+        bootstrap="vendor/autoload.php"
+        colors="true"
+        verbose="false"
+>
+    <testsuites>
+        <testsuite name="link">
+            <directory>Tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <server name="HTTP_HOST" value="localhost" force="true"/>
+        <server name="REQUEST_SCHEME" value="http" force="true"/>
+        <server name="REQUEST_URI" value="/index.php/some-page" force="true"/>
+        <server name="PHP_SELF" value="/index.php/some-page" force="true"/>
+        <server name="SCRIPT_NAME" value="/index.php" force="true"/>
+    </php>
 </phpunit>
