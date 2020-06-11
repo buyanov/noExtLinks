@@ -33,8 +33,8 @@ jobs:
         with:
           name: vendor
       - shell: bash
-          run: |
-            tar -zxf vendor.tgz
+        run: |
+          tar -zxf vendor.tgz
       - name: PHP Code Sniffer
         run: ./scripts/robo run:phpcs
 
@@ -47,7 +47,7 @@ jobs:
         with:
           name: vendor
       - shell: bash
-          run: |
-            tar -zxf vendor.tgz
+        run: |
+          tar -zxf vendor.tgz
       - name: PHP Unit
         run: ./scripts/robo run:phpunit
