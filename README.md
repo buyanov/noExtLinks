@@ -11,7 +11,7 @@
 
 ### Требования (Requirements)
 
-* PHP 5.6 or 7+ (min PHP 5.4);
+* PHP 7.1+;
 * Joomla! 3.2+
 
 ### Использование (Usage)
