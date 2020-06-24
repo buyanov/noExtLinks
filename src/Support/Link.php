@@ -29,7 +29,7 @@ class Link
     /**
      * @var string $tag
      */
-    protected static $tag = 'a';
+    protected $tag = 'a';
 
     public function __construct($href = '', $anchor = '')
     {
@@ -121,8 +121,6 @@ class Link
         foreach ($this->args as $prop => $value) {
             if (null !== $value) {
                 $props[] = "{$prefix}{$prop}=\"$value\"";
-            } else {
-                $props[] = $prefix . $prop;
             }
         }
 
@@ -135,12 +133,12 @@ class Link
 
     public function setTag($tag): void
     {
-        self::$tag = $tag;
+        $this->tag = $tag;
     }
 
     public function __toString()
     {
-        $tag = static::$tag;
+        $tag = $this->tag;
 
         return "<$tag {$this->getProps($tag === 'a')}>$this->anchor</$tag>";
     }

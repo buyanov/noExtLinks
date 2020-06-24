@@ -12,15 +12,19 @@
     "phpunit/phpunit": "^9",
     "joomla/utilities": "^1.6",
     "joomla/uri": "^1.2",
-    "joomla/registry": "~1.0"
+    "joomla/registry": "~1.0",
+    "joomla/input": "^1.4"
   },
   "config": {
     "bin-dir": "scripts"
   },
   "autoload-dev": {
     "psr-4": {
-      "Buyanov\\NoExtLinks\\Tests\\": "Tests/",
+      "Tests\\": "Tests/",
       "Buyanov\\NoExtLinks\\": "src/"
-    }
+    },
+    "files": [
+      "src/Support/helpers.php"
+    ]
   }
 }
