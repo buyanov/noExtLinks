@@ -1,6 +1,8 @@
 <?php
-namespace Buyanov\NoExtLinks\Support;
+namespace Tests\Unit;
 
+use Buyanov\NoExtLinks\Support\Parser;
+use Buyanov\NoExtLinks\Support\UriList;
 use Joomla\Registry\Registry;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +21,7 @@ class ParserTest extends TestCase
     public function getOptions(array $options = []): Registry
     {
         $result = [];
-        $optionsFile = __DIR__ . '/../src/noextlinks.xml';
+        $optionsFile = __DIR__ . '/../../src/noextlinks.xml';
         if (file_exists($optionsFile)) {
             $xml = simplexml_load_string(file_get_contents($optionsFile));
             $fieldsets = $xml->xpath('/extension/config/fields/fieldset');
@@ -47,8 +49,20 @@ class ParserTest extends TestCase
     {
         $options = $this->getOptions($options);
 
+        $excludedDomains = $this->getMockBuilder(UriList::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $excludedDomains->method('exists')->willReturn(false);
+
+        $removedDomains = $this->getMockBuilder(UriList::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $removedDomains->method('exists')->willReturn(false);
+
         Parser::create($content, $options)
-            ->prepare()
+            ->prepare($excludedDomains, $removedDomains)
             ->parse()
             ->finish();
 
@@ -73,6 +87,11 @@ class ParserTest extends TestCase
                 [],
                 'Test <a href="/test">link</a> with text'
             ],
+            "Page anchor" => [
+                'Test <a href="#headerId">link</a> with text',
+                [],
+                'Test <a href="#headerId">link</a> with text'
+            ],
             "Simple internal link absolutize=on" => [
                 'Test <a href="/test">link</a> with text',
                 ['absolutize' => "1"],
@@ -82,6 +101,11 @@ class ParserTest extends TestCase
                 'Test <a href="https://google.com"></a> with text',
                 [],
                 'Test <!--noindex--><a href="https://google.com" target="_blank" rel="nofollow" class="external-link"></a><!--/noindex--> with text'
+            ],
+            "External link with id" => [
+                'Test <a href="https://google.com" id="linkId"></a> with text',
+                [],
+                'Test <!--noindex--><a href="https://google.com" id="linkId" target="_blank" rel="nofollow" class="external-link"></a><!--/noindex--> with text'
             ],
             "Call-able link" => [
                 'Test <a href="tel:123-456-7890">123-456-7890</a> with text',
@@ -164,5 +188,53 @@ class ParserTest extends TestCase
                 'Test <!--noindex--><span data-href="https://google.com" data-target="_blank" data-title="google" data-rel="nofollow" class="my-custom-class external-link --set-title js-modify">google</span><!--/noindex--> with text'
             ],
         ];
+    }
+
+    public function testParserWithLists(): void
+    {
+        $options = $this->getOptions([]);
+
+        $excludedDomains = new UriList();
+        $excludedDomains->push('https://saity74.ru');
+
+        $removedDomains = new UriList();
+        $removedDomains->push('https://google.com');
+
+        $content = '<a href="https://google.com">google</a><a href="https://saity74.ru">saity74</a>';
+        Parser::create($content, $options)
+            ->prepare($excludedDomains, $removedDomains)
+            ->parse()
+            ->finish();
+
+        $this->assertEquals('<a href="https://saity74.ru">saity74</a>', $content);
+    }
+
+    public function testInternalRedirect(): void
+    {
+        $options = $this->getOptions(['use_redirect_page' => true]);
+
+        $excludedDomains = $this->getMockBuilder(UriList::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $excludedDomains->method('exists')->willReturn(false);
+
+        $removedDomains = $this->getMockBuilder(UriList::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $removedDomains->method('exists')->willReturn(false);
+
+        $content = '<a href="https://saity74.ru">saity74</a>';
+        Parser::create($content, $options)
+            ->prepare($excludedDomains, $removedDomains, static function ($href) {
+                return 'http://localhost/?to=' . $href;
+            })
+            ->parse()
+            ->finish();
+
+        $expect = '<a href="http://localhost/?to=https://saity74.ru" target="_blank" title="saity74" class="external-link --set-title --internal-redirect">saity74</a>';
+
+        $this->assertEquals($expect, $content);
     }
 }

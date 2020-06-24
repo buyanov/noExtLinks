@@ -238,6 +238,6 @@
 		</fields>
 	</config>
 	<updateservers>
-		<server type="extension" name="Github">https://github.com/buyanov/noExtLinks/blob/master/manifest.xml</server>
+		<server type="extension" name="Github">https://raw.githubusercontent.com/buyanov/noExtLinks/master/manifest.xml</server>
 	</updateservers>
 </extension>
