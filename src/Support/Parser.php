@@ -5,8 +5,6 @@ namespace Buyanov\NoExtLinks\Support;
 use Joomla\Registry\Registry;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
-use function Buyanov\NoExtLinks\Support\base;
-
 
 class Parser
 {
