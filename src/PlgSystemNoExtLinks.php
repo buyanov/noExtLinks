@@ -13,20 +13,21 @@ namespace Buyanov\NoExtLinks;
 defined('_JEXEC') or die;
 
 use Buyanov\NoExtLinks\Support\Parser;
+use Buyanov\NoExtLinks\Support\UriList;
 use Joomla\Utilities\ArrayHelper;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
+use function Buyanov\NoExtLinks\Support\base;
 
-if (!class_exists('PlgSystemNoExtLinks')) {
+if (!defined('TESTS_ENV') && !class_exists(PlgSystemNoExtLinks::class)) {
     \JLoader::registerAlias('PlgSystemNoExtLinks', 'Buyanov\NoExtLinks\PlgSystemNoExtLinks');
-    require_once(__DIR__ . '/Support/Parser.php');
-    require_once(__DIR__ . '/Support/Link.php');
+    require_once __DIR__  . '/Support/helpers.php';
+    \JLoader::registerNamespace('Buyanov\\NoExtLinks\\Support', __DIR__ . '/Support', false, false, 'psr4');
 }
 
 /**
  * Class PlgSystemNoExtLinks
  *
- * @since 3.2
  */
 class PlgSystemNoExtLinks extends \JPlugin
 {
@@ -34,49 +35,23 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Object of Joomla! application class
      *
      * @var $app \JApplicationCms
-     * @since 1.0
      */
     protected $app;
 
     /**
-     * Array of excluded domains
+     * List of excluded domains
      *
-     * @var $whiteList array
-     * @since 1.0
+     * @var $excludedDomains UriList
      */
-    protected $whiteList = [];
+
+    protected $excludedDomains;
 
     /**
-     * Array of domains for remove
+     * List of domains for remove
      *
-     * @var $removeList array
-     * @since 1.0
+     * @var $removedDomains UriList
      */
-    protected $removeList = [];
-
-    /**
-     * Array of excluded html blocks
-     *
-     * @var $blocks array
-     * @since 1.0
-     */
-    protected static $blocks;
-
-    /**
-     * Redirect page flag
-     *
-     * @var $useRedirectPage boolean
-     * @since 1.0
-     */
-    protected $useRedirectPage;
-
-    /**
-     * Noindex wrapper flag
-     *
-     * @var $useRedirectPage boolean
-     * @since 1.0
-     */
-    protected $useNoIndexWrapper;
+    protected $removedDomains;
 
     /**
      * Constructor
@@ -86,16 +61,17 @@ class PlgSystemNoExtLinks extends \JPlugin
      *                            Recognized key values include 'name', 'group', 'params', 'language'
      *                            (this list is not meant to be comprehensive).
      *
-     * @since   1.7.5
      */
     public function __construct($subject, array $config = array())
     {
         parent::__construct($subject, $config);
 
-        $this->useRedirectPage = $this->params->get('use_redirect_page', false);
-        $this->useNoIndexWrapper = $this->params->get('noindex', true);
+        $this->excludedDomains = new UriList();
+        $this->excludeSiteDomain();
+        $this->excludeDomainsFromWhiteList();
+        $this->createExcludedDomainsList();
 
-        $this->createWhiteList();
+        $this->removedDomains = new UriList();
         $this->createRemoveList();
     }
 
@@ -103,11 +79,10 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method on Before render
      *
      * @return boolean
-     * @since 1.7.11
      */
-    public function onBeforeRender()
+    public function onBeforeRender(): bool
     {
-        if (!$this->useRedirectPage) {
+        if (!$this->params->get('use_redirect_page', false)) {
             return true;
         }
 
@@ -128,14 +103,9 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method on After render
      *
      * @return boolean
-     * @since 1.0
      */
-    public function onAfterRender()
+    public function onAfterRender(): bool
     {
-        $jqueryScript = '<script type="text/javascript">'
-            . file_get_contents(__DIR__ . '/noextlinks.js')
-            . '</script></body>';
-
         if ($this->app->isAdmin()) {
             return true;
         }
@@ -151,11 +121,14 @@ class PlgSystemNoExtLinks extends \JPlugin
         }
 
         Parser::create($content, $this->params)
-            ->prepare($this->whiteList, $this->removeList, [$this, 'getRedirectUri'])
+            ->prepare($this->excludedDomains, $this->removedDomains, [$this, 'getRedirectUri'])
             ->parse()
             ->finish();
 
         if ($this->params->get('usejs')) {
+            $jqueryScript = '<script type="text/javascript">'
+                . file_get_contents(__DIR__ . '/noextlinks.js')
+                . '</script></body>';
             $content = preg_replace('/<\/body>/i', $jqueryScript, $content);
         }
 
@@ -165,32 +138,11 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method for create Uri string from parts
-     *
-     * @param   string  $host    Uri host
-     * @param   string  $scheme  Uri scheme
-     * @param   string  $path    Uri path
-     *
-     * @return  array
-     * @since 1.0
-     */
-    protected static function createUri($host, $scheme = null, $path = null)
-    {
-        $uri = new Uri;
-        $uri->setScheme($scheme ?: '*');
-        $uri->setHost($host);
-        $uri->setPath($path ?: '/*');
-
-        return array($uri->toString(array('host')) => $uri);
-    }
-
-    /**
      * Method for get categories
      *
      * @return  array
-     * @since   1.7.5
      */
-    private function getExcludedCategories()
+    private function getExcludedCategories(): array
     {
         $categories = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_categories', '')));
         $categories = array_merge(
@@ -205,9 +157,8 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method for get categories
      *
      * @return  array
-     * @since   1.7.5
      */
-    private function getExcludedMenuItems()
+    private function getExcludedMenuItems(): array
     {
         $items = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_menu_items', '')), []);
         $items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
@@ -219,9 +170,8 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method for check active menu item
      *
      * @return boolean
-     * @since  1.7.5
      */
-    private function checkMenuItem()
+    private function checkMenuItem(): bool
     {
         $menu = $this->app->getMenu();
         if (!$menu) {
@@ -241,10 +191,9 @@ class PlgSystemNoExtLinks extends \JPlugin
     /**
      * Method for check current category
      *
-     * @return boolean
-     * @since  1.7.5
+     * @return bool
      */
-    private function checkCategory()
+    private function checkCategory(): bool
     {
         $result = false;
         $categories = $this->getExcludedCategories();
@@ -264,19 +213,17 @@ class PlgSystemNoExtLinks extends \JPlugin
         return $result;
     }
 
-    /**
-     * Method for create white list
-     *
-     * @return  void
-     * @since 1.7.5
-     */
-    private function createWhiteList()
+    private function excludeSiteDomain(): void
     {
-        $theDomain = new Uri(\JUri::getInstance());
+        $theDomain = new Uri(base());
         $theDomain->setScheme('*');
         $theDomain->setPath('/*');
-        $this->whiteList += array($theDomain->toString(array('host', 'port')) => $theDomain);
 
+        $this->excludedDomains->push($theDomain);
+    }
+
+    private function excludeDomainsFromWhiteList(): void
+    {
         $whiteList = $this->params->get('whitelist', array());
 
         if (!is_array($whiteList)) {
@@ -284,22 +231,39 @@ class PlgSystemNoExtLinks extends \JPlugin
 
             if (!empty($whiteList)) {
                 foreach ($whiteList as $url) {
-                    if (trim($url)) {
-                        $uri = new Uri(trim($url));
-                        $this->whiteList += static::createUri($uri->getHost(), $uri->getScheme(), $uri->getPath());
-                    }
+                    $this->excludedDomains->push($url);
                 }
             }
         }
+    }
 
+    /**
+     * Method for create white list
+     *
+     * @return  void
+     */
+    private function createExcludedDomainsList(): void
+    {
         $exDomains = json_decode($this->params->get('excluded_domains'), true);
 
         if (!empty($exDomains) && is_array($exDomains)) {
-            $domains = array_map('static::createUri', $exDomains['host'], $exDomains['scheme'], $exDomains['path']);
-        }
+            $exUris = array_map(
+                static function ($scheme, $host, $path) {
+                    $uri = new Uri();
+                    $uri->setScheme($scheme ?: '*');
+                    $uri->setHost($host);
+                    $uri->setPath($path ?: '/*');
 
-        if (!empty($domains) && is_array($domains)) {
-            $this->whiteList = array_merge($this->whiteList, ...$domains);
+                    return $uri;
+                },
+                $exDomains['scheme'],
+                $exDomains['host'],
+                $exDomains['path']
+            );
+
+            $list = new UriList();
+            $list->fromArray($exUris);
+            $this->excludedDomains->merge($list);
         }
     }
 
@@ -307,9 +271,8 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method for check current article
      *
      * @return boolean
-     * @since  1.7.5
      */
-    private function checkArticle()
+    private function checkArticle(): bool
     {
         $articles = explode(',', $this->params->get('excluded_articles', ''));
         $article = $this->getCurrentArticle();
@@ -321,7 +284,6 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method get current article item
      *
      * @return object|null
-     * @since  1.7.5
      */
     private function getCurrentArticle()
     {
@@ -344,15 +306,25 @@ class PlgSystemNoExtLinks extends \JPlugin
      * Method for create remove domains list
      *
      * @return  void
-     * @since 1.7.10
      */
-    private function createRemoveList()
+    private function createRemoveList(): void
     {
-        $this->removeList = null;
         $rmDomains = json_decode($this->params->get('removed_domains'), true);
 
-        if (!empty($rmDomains) && is_array($rmDomains) && isset($rmDomains['host']) && !empty($rmDomains['host'])) {
-            $this->removeList = call_user_func_array("array_merge", array_map("static::createUri", $rmDomains['host']));
+        if ($rmDomains) {
+            $rmUris = array_map(
+                static function ($host) {
+                    $uri = new Uri();
+                    $uri->setScheme('*');
+                    $uri->setHost($host);
+                    $uri->setPath('/*');
+
+                    return $uri;
+                },
+                $rmDomains['host']
+            );
+
+            $this->removedDomains->fromArray($rmUris);
         }
     }
 

@@ -2,15 +2,20 @@
 <phpunit
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/latest/phpunit.xsd"
-        bootstrap="vendor/autoload.php"
+        bootstrap="Tests/Unit/bootstrap.php"
         colors="true"
         verbose="false"
 >
     <testsuites>
-        <testsuite name="link">
-            <directory>Tests</directory>
+        <testsuite name="unit">
+            <directory>Tests/Unit</directory>
         </testsuite>
     </testsuites>
+    <filter>
+        <whitelist>
+            <directory>src</directory>
+        </whitelist>
+    </filter>
     <php>
         <server name="HTTP_HOST" value="localhost" force="true"/>
         <server name="REQUEST_SCHEME" value="http" force="true"/>

@@ -11,7 +11,7 @@
 
 ### Требования (Requirements)
 
-* PHP 5.6 or 7+ (min PHP 5.4);
+* PHP 7.1+;
 * Joomla! 3.2+
 
 ### Использование (Usage)
@@ -68,3 +68,9 @@ jQuery('.external-link');
 Плагин живет уже более 3х лет и постоянно дорабатывается под нужды оптимизаторов,
 весь функционал придуман его же пользователями. Если есть идеи по улучшению или расширению
 текущего функционала обращайтесь!
+
+## Donation
+If this project help you reduce time to develop, you can give me a cup of coffee :) 
+
+[![Donate](https://img.shields.io/badge/Donate-Ya%20Money-yellow)](https://money.yandex.ru/to/41001252912076/500)
+

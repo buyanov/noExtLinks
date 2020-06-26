@@ -9,15 +9,21 @@ use Joomla\Uri\Uri;
 class Parser
 {
 
-    protected static $blocks = [];
+    protected $blocks = [];
 
     protected $content;
 
     protected $options;
 
-    protected $whiteList = [];
+    /**
+     * @var UriList $whiteList
+     */
+    protected $whiteList;
 
-    protected $removeList = [];
+    /**
+     * @var UriList $removeList
+     */
+    protected $removeList;
 
     protected $getRedirectUri;
 
@@ -32,7 +38,7 @@ class Parser
         return new static($content, $options);
     }
 
-    public function prepare(array $whiteList = [], array $removeList = [], callable $fn = null): Parser
+    public function prepare(UriList $whiteList, UriList $removeList, callable $fn = null): Parser
     {
         $this->whiteList = $whiteList;
         $this->removeList = $removeList;
@@ -40,7 +46,7 @@ class Parser
 
         $this->content = preg_replace_callback(
             '#<!-- extlinks -->(.*?)<!-- \/extlinks -->#s',
-            'static::excludeBlocks',
+            [$this, 'excludeBlocks'],
             $this->content
         );
 
@@ -58,11 +64,11 @@ class Parser
 
     public function finish(): void
     {
-        if (!empty(static::$blocks)) {
-            static::$blocks = array_reverse(static::$blocks);
+        if (!empty($this->blocks)) {
+            $this->blocks = array_reverse($this->blocks);
             $this->content = preg_replace_callback(
                 '/<!-- noExternalLinks-White-Block -->/i',
-                'static::includeBlocks',
+                [$this, 'includeBlocks'],
                 $this->content
             );
         }
@@ -74,9 +80,9 @@ class Parser
      * @param   array  $matches  Array of blocks
      * @return  string
      */
-    private static function excludeBlocks($matches)
+    private function excludeBlocks($matches): string
     {
-        static::$blocks[] = $matches[1];
+        $this->blocks[] = $matches[1];
 
         return '<!-- noExternalLinks-White-Block -->';
     }
@@ -86,9 +92,9 @@ class Parser
      *
      * @return  string
      */
-    private static function includeBlocks()
+    private function includeBlocks(): string
     {
-        return '<!-- extlinks -->' . array_pop(static::$blocks) . '<!-- /extlinks -->';
+        return '<!-- extlinks -->' . array_pop($this->blocks) . '<!-- /extlinks -->';
     }
 
     /**
@@ -99,8 +105,6 @@ class Parser
      */
     protected function replace($matches)
     {
-        static::checkMatch($matches);
-
         [$text, $pureArgs, $href, $anchor] = $matches;
 
         // If anchor for element on same page - ignore it
@@ -112,9 +116,10 @@ class Parser
         $uri = new Uri($href);
 
         if ($this->isRelativeUri($uri)) {
-
             if ($this->options->get('absolutize')) {
-                $newHref = rtrim(static::base(), '/') . $href;
+                $newHref = base() . (StringHelper::strpos($href, '/') === 0
+                    ? ltrim($href, '/')
+                    : $href);
                 $link = Link::create()->setAnchor($anchor)->setArgs($args);
                 $link->href = $newHref;
 
@@ -129,11 +134,11 @@ class Parser
             return $text;
         }
 
-        if ($this->isRemovedUri($uri)) {
+        if ($this->removeList->exists($uri)) {
             return '';
         }
 
-        if ($this->isExcludedUri($uri)) {
+        if ($this->whiteList->exists($uri)) {
             return $text;
         }
 
@@ -153,7 +158,6 @@ class Parser
             ->setAnchor($anchor)
             ->setArgs($args)
             ->addClass('external-link');
-
 
         if ($this->options->get('blank') !== '0') {
             $link->target = $this->options->get('blank');
@@ -199,88 +203,9 @@ class Parser
         return (string) $link;
     }
 
-    /**
-     * Check the buffer.
-     *
-     * @param   array  $match  Buffer to be checked.
-     * @return  void
-     */
-    private static function checkMatch($match): void
-    {
-        if ($match === null) {
-            switch (preg_last_error()) {
-                case PREG_BACKTRACK_LIMIT_ERROR:
-                    $message = 'PHP regular expression limit reached (pcre.backtrack_limit)';
-                    break;
-                case PREG_RECURSION_LIMIT_ERROR:
-                    $message = 'PHP regular expression limit reached (pcre.recursion_limit)';
-                    break;
-                case PREG_BAD_UTF8_ERROR:
-                    $message = 'Bad UTF8 passed to PCRE function';
-                    break;
-                default:
-                    $message = 'Unknown PCRE error calling PCRE function';
-            }
-
-            throw new RuntimeException($message);
-        }
-    }
-
     private function isRelativeUri($uri): bool
     {
         return (!$uri->toString(['scheme', 'host', 'port']) && $uri->toString(['path', 'query', 'fragment']));
-    }
-
-    /**
-     * Check the URI.
-     *
-     * @param   Uri  $uri  Uri object to be checked.
-     * @return  boolean
-     */
-    private function isExcludedUri($uri): bool
-    {
-        $domain = $uri->toString(['host', 'port']);
-
-        if (!empty($domain)) {
-            foreach ($this->whiteList as $eUri) {
-                $regex = [];
-
-                if ($eUri->getScheme() === '*') {
-                    $regex[] = 'http[s]?\://';
-                } else {
-                    $regex[] = $eUri->getScheme() . '\://';
-                }
-
-                if ($host = $eUri->toString(['host', 'port'])) {
-                    $regex[] = str_replace('\*', '[\w\-]+', $host);
-                }
-
-                if ($path = $eUri->getPath()) {
-                    $regex[] = str_replace('/\*', '(\/[\w\-\~\:\.\/]*|)', $path);
-                }
-
-                $rx = '~^' . implode('', $regex) . '$~iU';
-
-                if (preg_match($rx, $uri->toString(['scheme', 'user', 'pass', 'host', 'port', 'path']))) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check the URI for remove.
-     *
-     * @param   Uri  $uri  Uri object to be checked.
-     * @return  boolean
-     */
-    private function isRemovedUri($uri)
-    {
-        $domain = $uri->toString(array('host'));
-
-        return !empty($domain) && !empty($this->removeList) && array_key_exists($domain, $this->removeList);
     }
 
     /**
@@ -292,8 +217,8 @@ class Parser
      */
     public static function parseAttributes($string): array
     {
-        $attr = array();
-        $retarray = array();
+        $attr = [];
+        $retarray = [];
 
         // Let's grab all the key/value pairs using a regular expression
         preg_match_all('/([\w:-]+)[\s]?=[\s]?"([^"]*)"/i', $string, $attr);
@@ -307,22 +232,6 @@ class Parser
         }
 
         return $retarray;
-    }
-
-    public static function base(): string
-    {
-        $host = $_SERVER['HTTP_HOST'];
-        $scheme = $_SERVER['REQUEST_SCHEME'];
-
-        if (strpos(php_sapi_name(), 'cgi') !== false
-            && !ini_get('cgi.fix_pathinfo')
-            && !empty($_SERVER['REQUEST_URI'])) {
-            $script_name = $_SERVER['PHP_SELF'];
-        } else {
-            $script_name = $_SERVER['SCRIPT_NAME'];
-        }
-
-        return $scheme . '://' . $host . rtrim(dirname($script_name), '/\\');
     }
 
     /**

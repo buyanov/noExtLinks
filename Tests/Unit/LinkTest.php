@@ -1,6 +1,7 @@
 <?php
-namespace Buyanov\NoExtLinks\Support;
+namespace Tests\Unit;
 
+use Buyanov\NoExtLinks\Support\Link;
 use PHPUnit\Framework\TestCase;
 
 class LinkTest extends TestCase
@@ -71,6 +72,48 @@ class LinkTest extends TestCase
         $this->assertEquals($expected, (string) $this->link);
     }
 
+    public function testGetter(): void
+    {
+        $href = 'https://saity74.ru';
+        $this->assertEquals($this->link->__get('href'), $href);
+    }
+
+    public function testSetter(): void
+    {
+        $rel = 'nofollow';
+        $this->link->__set('rel', $rel);
+        $this->assertEquals($rel, $this->link->rel);
+    }
+
+    public function testSetterWithClass(): void
+    {
+        $class = 'link-class';
+        $this->link->__set('class', $class);
+        $this->assertFalse(isset($this->link->class));
+    }
+
+    public function testIsSet(): void
+    {
+        $this->link->rel = 'nofollow';
+        $this->assertTrue(isset($this->link->rel));
+    }
+
+    public function testGetProps(): void
+    {
+        $this->link->setArgs(['id' => 'linkId', 'rel' => 'nofollow', 'href' => 'http://saity74.ru']);
+        $result = $this->invokeMethod($this->link, 'getProps', [false]);
+        $expected = 'data-id="linkId" data-rel="nofollow" data-href="http://saity74.ru"';
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testGetPropWithDataPrefix(): void
+    {
+        $this->link->setArgs(['id' => 'linkId', 'rel' => 'nofollow', 'href' => 'http://saity74.ru']);
+        $result = $this->invokeMethod($this->link, 'getProps', [true]);
+        $expected = 'id="linkId" rel="nofollow" href="http://saity74.ru"';
+        $this->assertEquals($expected, $result);
+    }
+
     /**
      * @param string $href Property for link
      * @param string $anchor Anchor for link
@@ -81,10 +124,11 @@ class LinkTest extends TestCase
      */
     public function testCreate($href, $anchor, $class, $expectedResult): void
     {
-        $link = Link::create();
+        $link = Link::create()
+            ->setAnchor($anchor)
+            ->addClass($class);
+
         $link->href = $href;
-        $link->setAnchor($anchor);
-        $link->addClass($class);
 
         $this->assertEquals($expectedResult, (string) $link);
     }
@@ -92,10 +136,30 @@ class LinkTest extends TestCase
     public function providerTestCreateLink(): array
     {
         return [
-            "Create simple link" => ['https://saity74.ru', 'saity74', '', '<a href="https://saity74.ru">saity74</a>'],
-            "Create link without anchor" => ['https://saity74.ru', '', '', '<a href="https://saity74.ru"></a>'],
-            "Create link with img" => ['https://saity74.ru', '<img src="test.jpg" />', '', '<a href="https://saity74.ru"><img src="test.jpg" /></a>'],
-            "Create link with class prop" =>  ['https://saity74.ru', 'saity74', 'test-class', '<a href="https://saity74.ru" class="test-class">saity74</a>']
+            "Create simple link" => [
+                'https://saity74.ru',
+                'saity74',
+                '',
+                '<a href="https://saity74.ru">saity74</a>'
+            ],
+            "Create link without anchor" => [
+                'https://saity74.ru',
+                '',
+                '',
+                '<a href="https://saity74.ru"></a>'
+            ],
+            "Create link with img" => [
+                'https://saity74.ru',
+                '<img src="test.jpg" alt="" />',
+                '',
+                '<a href="https://saity74.ru"><img src="test.jpg" alt="" /></a>'
+            ],
+            "Create link with class prop" => [
+                'https://saity74.ru',
+                'saity74',
+                'test-class',
+                '<a href="https://saity74.ru" class="test-class">saity74</a>'
+            ]
         ];
     }
 }

@@ -540,5 +540,6 @@
 tests/_output/*
 
 composer.phar
+phpunit.phar
 /scripts/
 /dist/
