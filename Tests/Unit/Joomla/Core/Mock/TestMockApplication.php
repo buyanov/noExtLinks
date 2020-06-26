@@ -27,6 +27,7 @@ class TestMockApplication
      * @param object $test A test object.
      *
      * @param array $config
+     *
      * @return  object
      *
      * @since   1.7.3
@@ -64,6 +65,7 @@ class TestMockApplication
                 ->method('getMenu')
                 ->willReturn($menu);
         }
+
 
         $language = TestMockLanguage::create($test);
         $mockObject->expects($test->any())

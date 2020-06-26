@@ -37,7 +37,7 @@ abstract class JPlugin
     }
 
     /**
-     * Method for only tests
+     * Method for tests only
      * @return mixed
      */
     public function getApp()

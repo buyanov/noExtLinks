@@ -12,6 +12,7 @@ class PlgSystemNoExtLinksTest extends TestCase
 {
 
     protected function createPluginWithParams(array $params, array $appConfig = []): PlgSystemNoExtLinks
+
     {
         $dispatcher = TestMockDispatcher::create($this);
 
@@ -27,6 +28,7 @@ class PlgSystemNoExtLinksTest extends TestCase
         $class = new PlgSystemNoExtLinks($dispatcher, $plugin);
 
         $app = TestMockApplication::create($this, $appConfig);
+
         $reflection = new \ReflectionObject($class);
         $appProperty = $reflection->getProperty('app');
         $appProperty->setAccessible('true');
@@ -166,6 +168,7 @@ class PlgSystemNoExtLinksTest extends TestCase
 
         $this->assertTrue($class->onAfterRender());
     }
+
 
     public function testOnAfterRenderWithExcludedCategoriesFalse(): void
     {
