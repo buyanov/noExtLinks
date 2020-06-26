@@ -38,4 +38,23 @@
         <maintainerurl>https://saity74.ru</maintainerurl>
         <targetplatform name="joomla" version="3.[3456789]"/>
     </update>
+    <update>
+        <name>plg_noextlinks</name>
+        <description></description>
+        <element>noextlinks</element>
+        <type>plugin</type>
+        <folder>system</folder>
+        <version>1.8.9</version>
+        <client>0</client>
+        <infourl title="Saity74">https://saity74.ru/no-external-links-joomla.html</infourl>
+        <downloads>
+            <downloadurl type="full" format="zip">https://github.com/buyanov/noExtLinks/releases/download/v1.8.9/noextlinks.zip</downloadurl>
+        </downloads>
+        <tags>
+            <tag>stable</tag>
+        </tags>
+        <maintainer>Buyanov Danila</maintainer>
+        <maintainerurl>https://saity74.ru</maintainerurl>
+        <targetplatform name="joomla" version="3.[3456789]"/>
+    </update>
 </updates>
