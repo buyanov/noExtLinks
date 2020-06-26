@@ -1,5 +1,7 @@
 <?php
 
+use Tests\Unit\Joomla\Core\Mock\TestMockApplication;
+
 define('_JEXEC', 1);
 
 define('JPATH_PLATFORM', 1);
@@ -34,6 +36,10 @@ abstract class JPlugin
         $this->params = $config['params'];
     }
 
+    /**
+     * Method for only tests
+     * @return mixed
+     */
     public function getApp()
     {
         return $this->app;

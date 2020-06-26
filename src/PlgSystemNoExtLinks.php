@@ -171,7 +171,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      *
      * @return boolean
      */
-    private function checkMenuItem()
+    private function checkMenuItem(): bool
     {
         $menu = $this->app->getMenu();
         if (!$menu) {

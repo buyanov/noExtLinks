@@ -24,13 +24,14 @@ class TestMockApplication
     /**
      * Creates and instance of the mock JApplication object.
      *
-     * @param   object  $test  A test object.
+     * @param object $test A test object.
      *
+     * @param array $config
      * @return  object
      *
      * @since   1.7.3
      */
-    public static function create($test)
+    public static function create($test, array $config = [])
     {
         // Collect all the relevant methods in JApplication (work in progress).
         $methods = array(
@@ -57,10 +58,12 @@ class TestMockApplication
             ->disableOriginalConstructor()
             ->getMock();
 
-        $menu = TestMockMenu::create($test, true, 42);
-        $mockObject->expects($test->any())
-            ->method('getMenu')
-            ->willReturn($menu);
+        if (isset($config['withMenu'])) {
+            $menu = TestMockMenu::create($test, true, $config['activeItem'] ?? false);
+            $mockObject->expects($test->any())
+                ->method('getMenu')
+                ->willReturn($menu);
+        }
 
         $language = TestMockLanguage::create($test);
         $mockObject->expects($test->any())

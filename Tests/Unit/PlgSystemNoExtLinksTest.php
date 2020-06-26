@@ -11,15 +11,7 @@ use Tests\Unit\Joomla\TestCase;
 class PlgSystemNoExtLinksTest extends TestCase
 {
 
-    public $body = [];
-    /**
-     * An instance of the class to test.
-     *
-     * @var    PlgSystemNoExtLinks
-     */
-    protected $class;
-
-    protected function createPluginWithParams(array $params): PlgSystemNoExtLinks
+    protected function createPluginWithParams(array $params, array $appConfig = []): PlgSystemNoExtLinks
     {
         $dispatcher = TestMockDispatcher::create($this);
 
@@ -34,7 +26,7 @@ class PlgSystemNoExtLinksTest extends TestCase
 
         $class = new PlgSystemNoExtLinks($dispatcher, $plugin);
 
-        $app = TestMockApplication::create($this);
+        $app = TestMockApplication::create($this, $appConfig);
         $reflection = new \ReflectionObject($class);
         $appProperty = $reflection->getProperty('app');
         $appProperty->setAccessible('true');
@@ -139,6 +131,36 @@ class PlgSystemNoExtLinksTest extends TestCase
         $class = $this->createPluginWithParams([
             'excluded_menu_items' => '42,43,44',
         ]);
+
+        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+
+        $this->assertTrue($class->onAfterRender());
+    }
+
+    public function testOnAfterRenderWithoutActiveItem(): void
+    {
+        $_REQUEST['option'] = 'com_content';
+        $_REQUEST['view'] = 'blog';
+        $_REQUEST['id'] = '2';
+
+        $class = $this->createPluginWithParams([
+            'excluded_menu_items' => '42,43,44',
+        ], ['withMenu' => true]);
+
+        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+
+        $this->assertTrue($class->onAfterRender());
+    }
+
+    public function testOnAfterRenderWithMenuAndActiveItem(): void
+    {
+        $_REQUEST['option'] = 'com_content';
+        $_REQUEST['view'] = 'blog';
+        $_REQUEST['id'] = '2';
+
+        $class = $this->createPluginWithParams([
+            'excluded_menu_items' => '42,43,44',
+        ],['withMenu' => true, 'activeItem' => 42]);
 
         $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
 
