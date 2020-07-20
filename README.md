@@ -65,7 +65,7 @@ jQuery('.external-link');
 
 ## Идеи и предложения (Ideas)
 
-Плагин живет уже более 3х лет и постоянно дорабатывается под нужды оптимизаторов,
+Плагин живет уже более 8-и лет и постоянно дорабатывается под нужды оптимизаторов,
 весь функционал придуман его же пользователями. Если есть идеи по улучшению или расширению
 текущего функционала обращайтесь!
 
@@ -73,4 +73,7 @@ jQuery('.external-link');
 If this project help you reduce time to develop, you can give me a cup of coffee :) 
 
 [![Donate](https://img.shields.io/badge/Donate-Ya%20Money-yellow)](https://money.yandex.ru/to/41001252912076/500)
+
+## Contacts 
+[![Chat](https://img.shields.io/badge/telegram-@dbuyanov-blue?logo=telegram)](https://t.me/dbuyanov)
 
