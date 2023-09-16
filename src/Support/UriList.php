@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Buyanov\NoExtLinks\Support;
 
+use Countable;
 use Joomla\Uri\Uri;
 
-class UriList implements \Countable
+class UriList implements Countable
 {
     protected $stack = [];
 
@@ -16,7 +17,8 @@ class UriList implements \Countable
     }
 
     /**
-     * Method for push new uri to stack
+     * Method for push new uri to stack.
+     *
      * @param string|Uri $uri
      */
     public function push($uri): void
@@ -30,7 +32,8 @@ class UriList implements \Countable
     }
 
     /**
-     * Returns the content of this class as array
+     * Returns the content of this class as array.
+     *
      * @return array
      */
     public function toArray(): array
@@ -39,7 +42,8 @@ class UriList implements \Countable
     }
 
     /**
-     * Method for merging two lists
+     * Method for merging two lists.
+     *
      * @param UriList $list
      */
     public function merge(UriList $list): void
@@ -51,7 +55,7 @@ class UriList implements \Countable
     {
         ['scheme' => $scheme, 'host' => $host, 'path' => $path] = $this->parseUri($maskedUri);
 
-        $uri = new Uri;
+        $uri = new Uri();
         $uri->setScheme($scheme ?: '*');
         $uri->setHost($host);
         $uri->setPath($path ?: '/*');
@@ -61,6 +65,7 @@ class UriList implements \Countable
 
     /**
      * @param string $uri
+     *
      * @return array
      */
     public function parseUri(string $uri): array
@@ -70,13 +75,14 @@ class UriList implements \Countable
 
         return [
             'scheme' => $matches['scheme'],
-            'host' => $matches['host'],
-            'path' => $matches['path']
+            'host'   => $matches['host'],
+            'path'   => $matches['path'],
         ];
     }
 
     /**
      * @param string $uri
+     *
      * @return Uri
      */
     public function map(string $uri): Uri
@@ -85,9 +91,9 @@ class UriList implements \Countable
     }
 
     /**
-     * @param string $scheme
-     * @param string $host
-     * @param string $port
+     * @param string      $scheme
+     * @param string      $host
+     * @param string      $port
      * @param string|null $path
      * @param string|null $query
      * @param string|null $fragment
@@ -96,9 +102,9 @@ class UriList implements \Countable
         string $scheme,
         string $host,
         string $port,
-        string $path = null,
-        string $query = null,
-        string $fragment = null
+        ?string $path = null,
+        ?string $query = null,
+        ?string $fragment = null
     ): void {
         $uri = new Uri();
         $uri->setScheme($scheme ?? '');
@@ -113,6 +119,7 @@ class UriList implements \Countable
 
     /**
      * @param $uri
+     *
      * @return bool
      */
     public function exists($uri): bool
@@ -124,6 +131,7 @@ class UriList implements \Countable
 
     /**
      * @param $uri
+     *
      * @return bool
      */
     public function isMasked($uri): bool
@@ -156,7 +164,7 @@ class UriList implements \Countable
             $regex[] = str_replace('/*', '(\/[\w\-\~\:\.\/]*|)', $path);
         }
 
-        $rx = '~^' . implode('', $regex) . '$~iU';
+        $rx     = '~^' . implode('', $regex) . '$~iU';
         $needle = $needle instanceof Uri ? $needle : new Uri($needle);
 
         if (preg_match($rx, $needle->toString(['scheme', 'host', 'port', 'path']))) {

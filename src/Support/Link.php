@@ -8,7 +8,6 @@ namespace Buyanov\NoExtLinks\Support;
  * @property string rel
  * @property string title
  */
-
 class Link
 {
     /**
@@ -42,11 +41,6 @@ class Link
         }
     }
 
-    public static function create(): Link
-    {
-        return new static($href = '', $anchor = '');
-    }
-
     public function __set($name, $value)
     {
         if ($name === 'class') {
@@ -64,6 +58,18 @@ class Link
     public function __isset($name)
     {
         return isset($this->args[$name]);
+    }
+
+    public function __toString()
+    {
+        $tag = $this->tag;
+
+        return "<{$tag} {$this->getProps($tag === 'a')}>{$this->anchor}</{$tag}>";
+    }
+
+    public static function create(): Link
+    {
+        return new static();
     }
 
     public function addClass(string $class): Link
@@ -89,11 +95,9 @@ class Link
         return $this;
     }
 
-    public function addArgs(array $args): Link
+    public function setTag($tag): void
     {
-        $this->args = array_merge($this->args, array_diff_key($args, $this->args));
-
-        return $this;
+        $this->tag = $tag;
     }
 
     protected function getClassProp(): string
@@ -119,8 +123,8 @@ class Link
         $props = [];
 
         foreach ($this->args as $prop => $value) {
-            if (null !== $value) {
-                $props[] = "{$prefix}{$prop}=\"$value\"";
+            if ($value !== null) {
+                $props[] = "{$prefix}{$prop}=\"{$value}\"";
             }
         }
 
@@ -129,17 +133,5 @@ class Link
         }
 
         return implode(' ', $props);
-    }
-
-    public function setTag($tag): void
-    {
-        $this->tag = $tag;
-    }
-
-    public function __toString()
-    {
-        $tag = $this->tag;
-
-        return "<$tag {$this->getProps($tag === 'a')}>$this->anchor</$tag>";
     }
 }

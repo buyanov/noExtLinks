@@ -6,7 +6,7 @@ namespace Buyanov\NoExtLinks\Support;
 
 function base(): string
 {
-    $host = $_SERVER['HTTP_HOST'];
+    $host   = $_SERVER['HTTP_HOST'];
     $scheme = $_SERVER['REQUEST_SCHEME'];
 
     if (strpos(php_sapi_name(), 'cgi') !== false

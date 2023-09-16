@@ -1,68 +1,72 @@
 <?php
+
 namespace Buyanov\NoExtLinks;
 
 /**
- * @package     Joomla.plugin
- * @subpackage  System.noextlinks
- *
  * @author      Buyanov Danila <info@saity74.ru>
- * @copyright   (C) 2012-2020 Buyanov Danila. All Rights Reserved.
+ * @copyright   (C) 2012-2023 Buyanov Danila. All Rights Reserved.
  * @license     GNU/GPLv2 or later; https://www.gnu.org/licenses/gpl-2.0.html
- **/
+ */
+defined('_JEXEC') or exit;
 
-defined('_JEXEC') or die;
+use function Buyanov\NoExtLinks\Support\base;
 
 use Buyanov\NoExtLinks\Support\Parser;
 use Buyanov\NoExtLinks\Support\UriList;
-use Joomla\Utilities\ArrayHelper;
+use Exception;
+use JLoader;
+use Joomla\CMS\Application\CMSApplication;
+use Joomla\CMS\Language\Multilanguage;
+use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri as JUri;
+use Joomla\Component\Content\Site\Model\ArticleModel;
+use Joomla\Event\SubscriberInterface;
 use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
-use function Buyanov\NoExtLinks\Support\base;
+use Joomla\Utilities\ArrayHelper;
 
 if (!defined('TESTS_ENV') && !class_exists(PlgSystemNoExtLinks::class)) {
-    \JLoader::registerAlias('PlgSystemNoExtLinks', 'Buyanov\NoExtLinks\PlgSystemNoExtLinks');
-    require_once __DIR__  . '/Support/helpers.php';
-    \JLoader::registerNamespace('Buyanov\\NoExtLinks\\Support', __DIR__ . '/Support', false, false, 'psr4');
+    JLoader::registerAlias('PlgSystemNoExtLinks', 'Buyanov\NoExtLinks\PlgSystemNoExtLinks');
+    require_once __DIR__ . '/Support/helpers.php';
+    JLoader::registerNamespace('Buyanov\\NoExtLinks\\Support', __DIR__ . '/Support', false, false, 'psr4');
 }
 
 /**
- * Class PlgSystemNoExtLinks
- *
+ * Class PlgSystemNoExtLinks.
  */
-class PlgSystemNoExtLinks extends \JPlugin
+class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
 {
     /**
-     * Object of Joomla! application class
-     *
-     * @var $app \JApplicationCms
+     * @var CMSApplication
      */
     protected $app;
 
     /**
-     * List of excluded domains
+     * List of excluded domains.
      *
-     * @var $excludedDomains UriList
+     * @var UriList $excludedDomains
      */
-
     protected $excludedDomains;
 
     /**
-     * List of domains for remove
+     * List of domains for remove.
      *
-     * @var $removedDomains UriList
+     * @var UriList $removedDomains
      */
     protected $removedDomains;
 
+    protected $allowLegacyListeners = false;
+
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param   object  $subject  The object to observe
-     * @param   array   $config   An optional associative array of configuration settings.
-     *                            Recognized key values include 'name', 'group', 'params', 'language'
-     *                            (this list is not meant to be comprehensive).
-     *
+     * @param object $subject The object to observe
+     * @param array  $config  An optional associative array of configuration settings.
+     *                        Recognized key values include 'name', 'group', 'params', 'language'
+     *                        (this list is not meant to be comprehensive).
      */
-    public function __construct($subject, array $config = array())
+    public function __construct($subject, array $config = [])
     {
         parent::__construct($subject, $config);
 
@@ -76,9 +80,22 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method on Before render
+     * Returns an array of events this subscriber will listen to.
      *
-     * @return boolean
+     * @return array
+     */
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            'onBeforeRender' => 'onBeforeRender',
+            'onAfterRender'  => 'onAfterRender',
+        ];
+    }
+
+    /**
+     * Method on Before render.
+     *
+     * @return bool
      */
     public function onBeforeRender(): bool
     {
@@ -86,10 +103,10 @@ class PlgSystemNoExtLinks extends \JPlugin
             return true;
         }
 
-        $currentItemId      = (int) $this->app->input->get('Itemid');
-        $redirectItemId     = (int) $this->params->get('redirect_page');
-        $redirectUrl        = $this->app->input->get('url', null, 'raw');
-        $redirectTimeout    = (int) $this->params->get('redirect_timeout', 5);
+        $currentItemId   = (int) $this->app->input->get('Itemid');
+        $redirectItemId  = (int) $this->params->get('redirect_page');
+        $redirectUrl     = $this->app->input->get('url', null, 'raw');
+        $redirectTimeout = (int) $this->params->get('redirect_timeout', 5);
 
         if ($currentItemId && $redirectItemId && $currentItemId === $redirectItemId && $redirectUrl) {
             $doc = $this->app->getDocument();
@@ -100,13 +117,15 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method on After render
+     * Method on After render.
      *
-     * @return boolean
+     * @throws Exception
+     *
+     * @return bool
      */
     public function onAfterRender(): bool
     {
-        if ($this->app->isAdmin()) {
+        if ($this->app->isClient('administrator')) {
             return true;
         }
 
@@ -138,38 +157,82 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method for get categories
+     * Create redirect page Url.
      *
-     * @return  array
+     * @param string $href string
+     *
+     * @return string
+     *
+     * @since   1.7.11
+     */
+    public function getRedirectUri(string $href): string
+    {
+        $base = $this->params->get('absolutize') ? rtrim(JUri::base(), '/') : '';
+        $menu = $this->app->getMenu();
+
+        if ($menu === null) {
+            return $href;
+        }
+
+        $item = $menu->getItem($this->params->get('redirect_page'));
+
+        if ($href && $item) {
+            $lang = '';
+
+            if ($item->language !== '*' && Multilanguage::isEnabled()) {
+                $lang = '&lang=' . $item->language;
+            }
+
+            return $base . Route::_('index.php?Itemid=' . $item->id . $lang . '&url=' . $href);
+        }
+
+        return $href;
+    }
+
+    /**
+     * Method for get categories.
+     *
+     * @return array
      */
     private function getExcludedCategories(): array
     {
-        $categories = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_categories', '')));
-        $categories = array_merge(
-            $categories,
-            ArrayHelper::toInteger($this->params->get('excluded_category_list', array()))
-        );
+        $categories           = [];
+        $deprecatedCategories = $this->params->get('excluded_categories');
 
-        return $categories;
+        if ($deprecatedCategories !== null) {
+            $categories = ArrayHelper::toInteger(explode(',', $deprecatedCategories));
+        }
+
+        return array_merge(
+            $categories,
+            ArrayHelper::toInteger($this->params->get('excluded_category_list', []))
+        );
     }
 
     /**
-     * Method for get categories
+     * Method for get categories.
      *
-     * @return  array
+     * @return array
      */
     private function getExcludedMenuItems(): array
     {
-        $items = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_menu_items', '')), []);
-        $items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
+        $items           = [];
+        $deprecatedItems = $this->params->get('excluded_menu_items');
 
-        return $items;
+        if ($deprecatedItems !== null) {
+            $items = ArrayHelper::toInteger(explode(',', $deprecatedItems), []);
+        }
+
+        return array_merge(
+            $items,
+            ArrayHelper::toInteger($this->params->get('excluded_menu', []))
+        );
     }
 
     /**
-     * Method for check active menu item
+     * Method for check active menu item.
      *
-     * @return boolean
+     * @return bool
      */
     private function checkMenuItem(): bool
     {
@@ -189,17 +252,20 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method for check current category
+     * Method for check current category.
+     *
+     * @throws Exception
      *
      * @return bool
      */
     private function checkCategory(): bool
     {
         $result = false;
+
         $categories = $this->getExcludedCategories();
-        $extension = $this->app->input->request->get('option');
-        $view = $this->app->input->request->get('view');
-        $id = $this->app->input->request->get('id');
+        $extension  = $this->app->getInput()->get('option');
+        $view       = $this->app->getInput()->get('view');
+        $id         = $this->app->getInput()->get('id');
 
         if (!empty($categories) && $extension === 'com_content') {
             if (($view === 'blog' || $view === 'category') && in_array($id, $categories, false)) {
@@ -207,7 +273,7 @@ class PlgSystemNoExtLinks extends \JPlugin
             }
 
             $currentArticle = $this->getCurrentArticle();
-            $result = $currentArticle && in_array($currentArticle->catid, $categories, false);
+            $result         = $currentArticle && in_array($currentArticle->catid, $categories, false);
         }
 
         return $result;
@@ -224,7 +290,7 @@ class PlgSystemNoExtLinks extends \JPlugin
 
     private function excludeDomainsFromWhiteList(): void
     {
-        $whiteList = $this->params->get('whitelist', array());
+        $whiteList = $this->params->get('whitelist', []);
 
         if (!is_array($whiteList)) {
             $whiteList = array_unique(explode("\n", $whiteList));
@@ -238,13 +304,17 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method for create white list
+     * Method for create white list.
      *
-     * @return  void
+     * @return void
      */
     private function createExcludedDomainsList(): void
     {
-        $exDomains = json_decode($this->params->get('excluded_domains'), true);
+        $excludedDomains = $this->params->get('excluded_domains');
+
+        if ($excludedDomains !== null) {
+            $exDomains = json_decode($excludedDomains, true);
+        }
 
         if (!empty($exDomains) && is_array($exDomains)) {
             $exUris = array_map(
@@ -268,48 +338,63 @@ class PlgSystemNoExtLinks extends \JPlugin
     }
 
     /**
-     * Method for check current article
+     * Method for check current article.
      *
-     * @return boolean
+     * @throws Exception
+     *
+     * @return bool
      */
     private function checkArticle(): bool
     {
         $articles = explode(',', $this->params->get('excluded_articles', ''));
-        $article = $this->getCurrentArticle();
+        $article  = $this->getCurrentArticle();
 
-        return (is_object($article) && is_array($articles) && in_array($article->id, $articles, false));
+        return is_object($article) && is_array($articles) && in_array($article->id, $articles, false);
     }
 
     /**
-     * Method get current article item
+     * Method get current article item.
+     *
+     * @throws Exception
      *
      * @return object|null
      */
-    private function getCurrentArticle()
+    private function getCurrentArticle(): ?object
     {
-        if (($this->app->input->get('option') !== 'com_content')
-            || ($this->app->input->get('view') !== 'article') || !$this->app->input->get('id')) {
+        $component = $this->app->getInput()->get('option');
+        $view      = $this->app->getInput()->get('view');
+
+        if (($component !== 'com_content')
+            || $view !== 'article'
+            || !$this->app->getInput()->get('id')) {
             return null;
         }
 
-        if (!\JLoader::import('models.article', JPATH_COMPONENT_SITE)) {
-            return null;
+        $articleModel = $this->app
+            ->bootComponent($component)
+            ->getMVCFactory()
+            ->createModel($view);
+
+        if ($articleModel instanceof ArticleModel) {
+            return $articleModel->getItem();
         }
 
-        $articleModel = new \ContentModelArticle();
-        $currentArticle = $articleModel->getItem();
-
-        return $currentArticle ?: null;
+        return null;
     }
 
     /**
-     * Method for create remove domains list
+     * Method for create remove domains list.
      *
-     * @return  void
+     * @return void
      */
     private function createRemoveList(): void
     {
-        $rmDomains = json_decode($this->params->get('removed_domains'), true);
+        $rmDomains      = null;
+        $removedDomains = $this->params->get('excluded_domains');
+
+        if ($removedDomains !== null) {
+            $rmDomains = json_decode($removedDomains, true);
+        }
 
         if ($rmDomains) {
             $rmUris = array_map(
@@ -326,31 +411,5 @@ class PlgSystemNoExtLinks extends \JPlugin
 
             $this->removedDomains->fromArray($rmUris);
         }
-    }
-
-    /**
-     * Create redirect page Url
-     *
-     * @param   string  $href  string
-     *
-     * @return  string
-     * @since   1.7.11
-     */
-    public function getRedirectUri($href)
-    {
-        $base  = $this->params->get('absolutize') ? rtrim(\JUri::base(), '/') : '';
-        $item  = $this->app->getMenu()->getItem($this->params->get('redirect_page'));
-
-        if ($href && $item) {
-            $lang = '';
-
-            if ($item->language !== '*' && \JLanguageMultilang::isEnabled()) {
-                $lang = '&lang=' . $item->language;
-            }
-
-            return $base . \JRoute::_('index.php?Itemid=' . $item->id . $lang . '&url=' . $href, true);
-        }
-
-        return $href;
     }
 }

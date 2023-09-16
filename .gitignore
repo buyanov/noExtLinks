@@ -543,3 +543,5 @@ composer.phar
 phpunit.phar
 /scripts/
 /dist/
+
+.php-cs-fixer.cache

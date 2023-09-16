@@ -1,0 +1,11 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  default:
+    cmd: task --list
+  fix:
+    desc: Run PHP-CS-Fixer
+    cmds: 
+      - docker run --rm -it -v $(pwd):/data cytopia/php-cs-fixer:3-php8.1 fix ./src --diff -v --config=.php-cs-fixer.dist.php

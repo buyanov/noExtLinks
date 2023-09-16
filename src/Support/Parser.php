@@ -8,7 +8,6 @@ use Joomla\Uri\Uri;
 
 class Parser
 {
-
     protected $blocks = [];
 
     protected $content;
@@ -38,10 +37,37 @@ class Parser
         return new static($content, $options);
     }
 
-    public function prepare(UriList $whiteList, UriList $removeList, callable $fn = null): Parser
+    /**
+     * Copy from JUtility
+     * Method to extract key/value pairs out of a string with XML style attributes.
+     *
+     * @param string $string String containing XML style attributes
+     *
+     * @return array Key/Value pairs for the attributes
+     */
+    public static function parseAttributes($string): array
     {
-        $this->whiteList = $whiteList;
-        $this->removeList = $removeList;
+        $attr     = [];
+        $retarray = [];
+
+        // Let's grab all the key/value pairs using a regular expression
+        preg_match_all('/([\w:-]+)[\s]?=[\s]?"([^"]*)"/i', $string, $attr);
+
+        if (is_array($attr)) {
+            $numPairs = count($attr[1]);
+
+            for ($i = 0; $i < $numPairs; ++$i) {
+                $retarray[$attr[1][$i]] = $attr[2][$i];
+            }
+        }
+
+        return $retarray;
+    }
+
+    public function prepare(UriList $whiteList, UriList $removeList, ?callable $fn = null): Parser
+    {
+        $this->whiteList      = $whiteList;
+        $this->removeList     = $removeList;
         $this->getRedirectUri = $fn;
 
         $this->content = preg_replace_callback(
@@ -55,8 +81,8 @@ class Parser
 
     public function parse(): Parser
     {
-        /* phpcs:ignore */
-        $regex = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^<>]*)>(?P<anchor>.*?)<\/a>/ius';
+        // phpcs:ignore
+        $regex         = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^<>]*)>(?P<anchor>.*?)<\/a>/ius';
         $this->content = preg_replace_callback($regex, [$this, 'replace'], $this->content);
 
         return $this;
@@ -65,7 +91,7 @@ class Parser
     public function finish(): void
     {
         if (!empty($this->blocks)) {
-            $this->blocks = array_reverse($this->blocks);
+            $this->blocks  = array_reverse($this->blocks);
             $this->content = preg_replace_callback(
                 '/<!-- noExternalLinks-White-Block -->/i',
                 [$this, 'includeBlocks'],
@@ -75,33 +101,11 @@ class Parser
     }
 
     /**
-     * Method for replace white blocks
+     * Method for replace links.
      *
-     * @param   array  $matches  Array of blocks
-     * @return  string
-     */
-    private function excludeBlocks($matches): string
-    {
-        $this->blocks[] = $matches[1];
-
-        return '<!-- noExternalLinks-White-Block -->';
-    }
-
-    /**
-     * Method for return excluded blocks into content
+     * @param array $matches Array with matched links
      *
-     * @return  string
-     */
-    private function includeBlocks(): string
-    {
-        return '<!-- extlinks -->' . array_pop($this->blocks) . '<!-- /extlinks -->';
-    }
-
-    /**
-     * Method for replace links
-     *
-     * @param   array  $matches  Array with matched links
-     * @return  mixed|string
+     * @return mixed|string
      */
     protected function replace($matches)
     {
@@ -113,14 +117,14 @@ class Parser
         }
 
         $args = static::parseAttributes($pureArgs);
-        $uri = new Uri($href);
+        $uri  = new Uri($href);
 
         if ($this->isRelativeUri($uri)) {
             if ($this->options->get('absolutize')) {
                 $newHref = base() . (StringHelper::strpos($href, '/') === 0
                     ? ltrim($href, '/')
                     : $href);
-                $link = Link::create()->setAnchor($anchor)->setArgs($args);
+                $link       = Link::create()->setAnchor($anchor)->setArgs($args);
                 $link->href = $newHref;
 
                 return $link;
@@ -150,6 +154,41 @@ class Parser
         }
 
         return $text;
+    }
+
+    /**
+     * @param Uri $uri
+     *
+     * @return bool
+     */
+    protected function isHttpUri(Uri $uri): bool
+    {
+        return ($uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']))
+            || (!$uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']));
+    }
+
+    /**
+     * Method for replace white blocks.
+     *
+     * @param array $matches Array of blocks
+     *
+     * @return string
+     */
+    private function excludeBlocks($matches): string
+    {
+        $this->blocks[] = $matches[1];
+
+        return '<!-- noExternalLinks-White-Block -->';
+    }
+
+    /**
+     * Method for return excluded blocks into content.
+     *
+     * @return string
+     */
+    private function includeBlocks(): string
+    {
+        return '<!-- extlinks -->' . array_pop($this->blocks) . '<!-- /extlinks -->';
     }
 
     private function link(string $anchor, array $args): string
@@ -205,42 +244,6 @@ class Parser
 
     private function isRelativeUri($uri): bool
     {
-        return (!$uri->toString(['scheme', 'host', 'port']) && $uri->toString(['path', 'query', 'fragment']));
-    }
-
-    /**
-     * Copy from JUtility
-     * Method to extract key/value pairs out of a string with XML style attributes
-     *
-     * @param   string  $string  String containing XML style attributes
-     * @return  array  Key/Value pairs for the attributes
-     */
-    public static function parseAttributes($string): array
-    {
-        $attr = [];
-        $retarray = [];
-
-        // Let's grab all the key/value pairs using a regular expression
-        preg_match_all('/([\w:-]+)[\s]?=[\s]?"([^"]*)"/i', $string, $attr);
-
-        if (is_array($attr)) {
-            $numPairs = count($attr[1]);
-
-            for ($i = 0; $i < $numPairs; $i++) {
-                $retarray[$attr[1][$i]] = $attr[2][$i];
-            }
-        }
-
-        return $retarray;
-    }
-
-    /**
-     * @param Uri $uri
-     * @return bool
-     */
-    protected function isHttpUri(Uri $uri): bool
-    {
-        return ($uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']))
-            || (!$uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']));
+        return !$uri->toString(['scheme', 'host', 'port']) && $uri->toString(['path', 'query', 'fragment']);
     }
 }
