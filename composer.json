@@ -26,5 +26,5 @@
       "src/Support/helpers.php"
     ]
   },
-  "minimum-stability": "dev"
+  "minimum-stability": "stable"
 }
