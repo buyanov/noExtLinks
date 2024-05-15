@@ -758,21 +758,21 @@
         },
         {
             "name": "joomla/filter",
-            "version": "1.4.0",
+            "version": "1.4.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/joomla-framework/filter.git",
-                "reference": "86fec1be2b545f8c00f899658f87f80b4fc67c81"
+                "reference": "8da26e82d10e024d974e867ae521bf6db1e620e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joomla-framework/filter/zipball/86fec1be2b545f8c00f899658f87f80b4fc67c81",
-                "reference": "86fec1be2b545f8c00f899658f87f80b4fc67c81",
+                "url": "https://api.github.com/repos/joomla-framework/filter/zipball/8da26e82d10e024d974e867ae521bf6db1e620e3",
+                "reference": "8da26e82d10e024d974e867ae521bf6db1e620e3",
                 "shasum": ""
             },
             "require": {
                 "joomla/string": "~1.3|~2.0",
-                "php": "^5.3.10|~7.0"
+                "php": "^5.3.10|~7.0|^8.0"
             },
             "require-dev": {
                 "joomla/coding-standards": "~2.0@alpha",
@@ -804,7 +804,21 @@
                 "framework",
                 "joomla"
             ],
-            "time": "2020-06-08T22:31:51+00:00"
+            "support": {
+                "issues": "https://github.com/joomla-framework/filter/issues",
+                "source": "https://github.com/joomla-framework/filter/tree/1.4.6"
+            },
+            "funding": [
+                {
+                    "url": "https://community.joomla.org/sponsorship-campaigns.html",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/joomla",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-02-20T16:24:59+00:00"
         },
         {
             "name": "joomla/input",
@@ -908,39 +922,42 @@
         },
         {
             "name": "joomla/string",
-            "version": "1.4.3",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/joomla-framework/string.git",
-                "reference": "fed0eee67f83b68674e8c6542ecfa28390b32fec"
+                "reference": "bcdb8d45ad3953bf3cfc2b9577288823cab381b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joomla-framework/string/zipball/fed0eee67f83b68674e8c6542ecfa28390b32fec",
-                "reference": "fed0eee67f83b68674e8c6542ecfa28390b32fec",
+                "url": "https://api.github.com/repos/joomla-framework/string/zipball/bcdb8d45ad3953bf3cfc2b9577288823cab381b9",
+                "reference": "bcdb8d45ad3953bf3cfc2b9577288823cab381b9",
                 "shasum": ""
             },
             "require": {
-                "php": "^5.3.10|~7.0"
+                "php": "^7.2.5|~8.0.0|~8.1.0",
+                "symfony/deprecation-contracts": "^2.1"
+            },
+            "conflict": {
+                "doctrine/inflector": "<1.2"
             },
             "require-dev": {
-                "joomla/coding-standards": "~2.0@alpha",
-                "joomla/test": "~1.0",
-                "phpunit/phpunit": "^4.8.35|^5.4.3|~6.0"
+                "doctrine/inflector": "^1.2",
+                "joomla/coding-standards": "^3.0@dev",
+                "joomla/test": "^2.0.1",
+                "phpunit/phpunit": "^8.5|^9.0"
             },
             "suggest": {
+                "doctrine/inflector": "To use the string inflector",
                 "ext-mbstring": "For improved processing"
             },
             "type": "joomla-package",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.x-dev"
+                    "dev-2.0-dev": "2.0-dev"
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Joomla\\String\\": "src/"
-                },
                 "files": [
                     "src/phputf8/utf8.php",
                     "src/phputf8/ord.php",
@@ -957,7 +974,10 @@
                     "src/phputf8/ucwords.php",
                     "src/phputf8/utils/ascii.php",
                     "src/phputf8/utils/validation.php"
-                ]
+                ],
+                "psr-4": {
+                    "Joomla\\String\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -970,7 +990,21 @@
                 "joomla",
                 "string"
             ],
-            "time": "2019-08-07T12:34:12+00:00"
+            "support": {
+                "issues": "https://github.com/joomla-framework/string/issues",
+                "source": "https://github.com/joomla-framework/string/tree/2.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://community.joomla.org/sponsorship-campaigns.html",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/joomla",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-08-15T12:47:17+00:00"
         },
         {
             "name": "joomla/uri",
@@ -2781,6 +2815,73 @@
             "time": "2020-05-30T20:06:45+00:00"
         },
         {
+            "name": "symfony/deprecation-contracts",
+            "version": "v2.5.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/deprecation-contracts.git",
+                "reference": "80d075412b557d41002320b96a096ca65aa2c98d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/80d075412b557d41002320b96a096ca65aa2c98d",
+                "reference": "80d075412b557d41002320b96a096ca65aa2c98d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "2.5-dev"
+                },
+                "thanks": {
+                    "name": "symfony/contracts",
+                    "url": "https://github.com/symfony/contracts"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "function.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "A generic function and convention to trigger deprecation notices",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v2.5.3"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-01-24T14:02:46+00:00"
+        },
+        {
             "name": "symfony/event-dispatcher",
             "version": "v4.4.10",
             "source": {
@@ -3585,5 +3686,6 @@
         "php": ">=7.1",
         "ext-json": "*"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
 }
