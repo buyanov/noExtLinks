@@ -52,8 +52,8 @@ class TestMockApplication
         );
 
         // Build the mock object.
-        $mockObject = $test->getMockBuilder('JApplication')
-            ->setMethods($methods)
+        $mockObject = $test->buildMock('JApplication')
+            ->onlyMethods($methods)
             ->setConstructorArgs(array())
             ->setMockClassName('')
             ->disableOriginalConstructor()
@@ -61,19 +61,19 @@ class TestMockApplication
 
         if (isset($config['withMenu'])) {
             $menu = TestMockMenu::create($test, true, $config['activeItem'] ?? false);
-            $mockObject->expects($test->any())
+            $mockObject->expects($test->anyInvocation())
                 ->method('getMenu')
                 ->willReturn($menu);
         }
 
 
         $language = TestMockLanguage::create($test);
-        $mockObject->expects($test->any())
+        $mockObject->expects($test->anyInvocation())
             ->method('getLanguage')
             ->willReturn($language);
 
         $document = TestMockDocument::create($test);
-        $mockObject->expects($test->any())
+        $mockObject->expects($test->anyInvocation())
             ->method('getDocument')
             ->willReturn($document);
 

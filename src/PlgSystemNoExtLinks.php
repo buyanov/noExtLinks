@@ -244,7 +244,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function createExcludedDomainsList(): void
     {
-        $exDomains = json_decode($this->params->get('excluded_domains'), true);
+        $exDomains = json_decode((string) $this->params->get('excluded_domains', ''), true);
 
         if (!empty($exDomains) && is_array($exDomains)) {
             $exUris = array_map(
@@ -309,7 +309,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function createRemoveList(): void
     {
-        $rmDomains = json_decode($this->params->get('removed_domains'), true);
+        $rmDomains = json_decode((string) $this->params->get('removed_domains', ''), true);
 
         if ($rmDomains) {
             $rmUris = array_map(

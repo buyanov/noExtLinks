@@ -2,6 +2,7 @@
 namespace Tests\Unit;
 
 use Buyanov\NoExtLinks\Support\Link;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class LinkTest extends TestCase
@@ -18,8 +19,6 @@ class LinkTest extends TestCase
     {
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
-
         return $method->invokeArgs($object, $parameters);
     }
 
@@ -114,14 +113,7 @@ class LinkTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    /**
-     * @param string $href Property for link
-     * @param string $anchor Anchor for link
-     * @param string $class Class property for link
-     * @param string $expectedResult What we expect our link result to be
-     *
-     * @dataProvider providerTestCreateLink
-     */
+    #[DataProvider('providerTestCreateLink')]
     public function testCreate($href, $anchor, $class, $expectedResult): void
     {
         $link = Link::create()
@@ -133,7 +125,7 @@ class LinkTest extends TestCase
         $this->assertEquals($expectedResult, (string) $link);
     }
 
-    public function providerTestCreateLink(): array
+    public static function providerTestCreateLink(): array
     {
         return [
             "Create simple link" => [

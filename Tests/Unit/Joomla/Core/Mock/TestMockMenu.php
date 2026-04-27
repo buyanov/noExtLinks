@@ -50,8 +50,8 @@ class TestMockMenu
         );
 
         // Build the mock object.
-        $mockObject = $test->getMockBuilder('JMenu')
-            ->setMethods($methods)
+        $mockObject = $test->buildMock('JMenu')
+            ->onlyMethods($methods)
             ->setConstructorArgs(array())
             ->setMockClassName('')
             ->disableOriginalConstructor()
@@ -59,28 +59,28 @@ class TestMockMenu
 
         self::createMenuSampleData();
 
-        $mockObject->expects($test->any())
+        $mockObject->expects($test->anyInvocation())
             ->method('getItem')
             ->willReturnMap(self::prepareGetItemData());
 
-        $mockObject->expects($test->any())
+        $mockObject->expects($test->anyInvocation())
             ->method('getItems')
             ->willReturnCallback(array(__CLASS__, 'prepareGetItemsData'));
 
-        $mockObject->expects($test->any())
+        $mockObject->expects($test->anyInvocation())
             ->method('getMenu')
             ->willReturn(self::$data);
 
         if ($setDefault)
         {
-            $mockObject->expects($test->any())
+            $mockObject->expects($test->anyInvocation())
                 ->method('getDefault')
                 ->willReturnMap(self::prepareDefaultData());
         }
 
         if ($setActive)
         {
-            $mockObject->expects($test->any())
+            $mockObject->expects($test->anyInvocation())
                 ->method('getActive')
                 ->willReturn(self::$data[$setActive]);
         }

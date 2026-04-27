@@ -4,6 +4,7 @@ namespace Tests\Unit;
 use Buyanov\NoExtLinks\Support\Parser;
 use Buyanov\NoExtLinks\Support\UriList;
 use Joomla\Registry\Registry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ParserTest extends TestCase
@@ -13,8 +14,6 @@ class ParserTest extends TestCase
     {
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
-
         return $method->invokeArgs($object, $parameters);
     }
 
@@ -38,13 +37,7 @@ class ParserTest extends TestCase
         return $result;
     }
 
-    /**
-     * @param string $content
-     * @param array $options
-     * @param string $expectedResult
-     *
-     * @dataProvider providerTestCreateLink
-     */
+    #[DataProvider('providerTestCreateLink')]
     public function testParserWithoutListsAndCallback($content, array $options, $expectedResult): void
     {
         $options = $this->getOptions($options);
@@ -69,7 +62,7 @@ class ParserTest extends TestCase
         $this->assertEquals($expectedResult, $content);
     }
 
-    public function providerTestCreateLink(): array
+    public static function providerTestCreateLink(): array
     {
         return [
             "Empty" => [

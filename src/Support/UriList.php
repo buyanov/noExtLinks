@@ -96,9 +96,9 @@ class UriList implements \Countable
         string $scheme,
         string $host,
         string $port,
-        string $path = null,
-        string $query = null,
-        string $fragment = null
+        ?string $path = null,
+        ?string $query = null,
+        ?string $fragment = null
     ): void {
         $uri = new Uri();
         $uri->setScheme($scheme ?? '');

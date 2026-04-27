@@ -4,18 +4,18 @@
         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/latest/phpunit.xsd"
         bootstrap="Tests/Unit/bootstrap.php"
         colors="true"
-        verbose="false"
+        cacheDirectory=".phpunit.cache"
 >
     <testsuites>
         <testsuite name="unit">
             <directory>Tests/Unit</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist>
+    <source>
+        <include>
             <directory>src</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </source>
     <php>
         <server name="HTTP_HOST" value="localhost" force="true"/>
         <server name="REQUEST_SCHEME" value="http" force="true"/>

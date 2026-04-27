@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Buyanov\NoExtLinks\Support\UriList;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class UriListTest extends TestCase
@@ -105,14 +106,7 @@ class UriListTest extends TestCase
         $this->assertTrue($this->list->compare('https://saity74.ru/blah', $uri));
     }
 
-    /**
-     * @param $uri
-     *
-     * @param string $scheme
-     * @param string $host
-     * @param string $path
-     * @dataProvider dataProviderParseUri
-     */
+    #[DataProvider('dataProviderParseUri')]
     public function testParseUri($uri, string $scheme, string $host, string $path): void
     {
         $uriParts = $this->list->parseUri($uri);
@@ -121,7 +115,7 @@ class UriListTest extends TestCase
         $this->assertEquals($path, $uriParts['path']);
     }
 
-    public function dataProviderParseUri(): array
+    public static function dataProviderParseUri(): array
     {
         return [
             'Generic uri' => ['https://saity74.ru/blah', 'https', 'saity74.ru', '/blah'],

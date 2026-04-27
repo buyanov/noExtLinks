@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Buyanov\NoExtLinks\PlgSystemNoExtLinks;
 use Joomla\Registry\Registry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Unit\Joomla\Core\Mock\TestMockApplication;
 use Tests\Unit\Joomla\Core\Mock\TestMockDispatcher;
 use Tests\Unit\Joomla\TestCase;
@@ -31,18 +32,12 @@ class PlgSystemNoExtLinksTest extends TestCase
 
         $reflection = new \ReflectionObject($class);
         $appProperty = $reflection->getProperty('app');
-        $appProperty->setAccessible('true');
         $appProperty->setValue($class, $app);
 
         return $class;
     }
 
-    /**
-     * @param $expected
-     * @param $params
-     *
-     * @dataProvider onBeforeRenderParamsDataProvider
-     */
+    #[DataProvider('onBeforeRenderParamsDataProvider')]
     public function testOnBeforeRender($expected, $params): void
     {
         $class = $this->createPluginWithParams($params);
@@ -50,7 +45,7 @@ class PlgSystemNoExtLinksTest extends TestCase
         $this->assertEquals($expected, $class->onBeforeRender());
     }
 
-    public function onBeforeRenderParamsDataProvider(): array
+    public static function onBeforeRenderParamsDataProvider(): array
     {
         return [
             [
@@ -70,19 +65,14 @@ class PlgSystemNoExtLinksTest extends TestCase
         ];
     }
 
-    /**
-     *
-     * @dataProvider onAfterRenderParamsDataProvider
-     * @param $expected
-     * @param $params
-     */
+    #[DataProvider('onAfterRenderParamsDataProvider')]
     public function testOnAfterRender($expected, $params): void
     {
         $class = $this->createPluginWithParams($params);
         $this->assertEquals($expected, $class->onAfterRender());
     }
 
-    public function onAfterRenderParamsDataProvider(): array
+    public static function onAfterRenderParamsDataProvider(): array
     {
         return [
             [

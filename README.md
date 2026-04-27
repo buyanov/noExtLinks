@@ -1,4 +1,10 @@
-## NoExternalLinks plugin for Joomla! 3
+## NoExternalLinks plugin for Joomla! 5/6
+
+> Version `1.x` is frozen legacy for Joomla! 3.x. It remains available from
+> existing `v1.x` releases and the `legacy/joomla-3` branch, but it is no
+> longer developed except for critical security fixes.
+
+Version `2.x` is the active development line for Joomla! 5/6.
 
 Скрывает все внешние ссылки от поисковых роботов
 
@@ -11,8 +17,8 @@
 
 ### Требования (Requirements)
 
-* PHP 7.1+;
-* Joomla! 3.2+
+* PHP 8.1+;
+* Joomla! 5/6
 
 ### Использование (Usage)
 
@@ -76,4 +82,3 @@ If this project help you reduce time to develop, you can give me a cup of coffee
 
 ## Contacts 
 [![Chat](https://img.shields.io/badge/telegram-@dbuyanov-blue?logo=telegram)](https://t.me/dbuyanov)
-

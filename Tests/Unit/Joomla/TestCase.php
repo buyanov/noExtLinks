@@ -6,6 +6,16 @@ use \PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
 abstract class TestCase extends PHPUnitTestCase
 {
+    public function buildMock($type)
+    {
+        return $this->getMockBuilder($type);
+    }
+
+    public function anyInvocation()
+    {
+        return $this->any();
+    }
+
     public function assignMockCallbacks($mockObject, $array): void
     {
         foreach ($array as $index => $method) {

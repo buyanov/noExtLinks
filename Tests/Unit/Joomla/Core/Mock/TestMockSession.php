@@ -88,8 +88,8 @@ class TestMockSession extends TestCase
         );
 
         // Build the mock object.
-        $mockObject = $test->getMockBuilder('JSession')
-            ->addMethods($methods)
+        $mockObject = $test->buildMock('JSession')
+            ->onlyMethods($methods)
             ->setConstructorArgs(array())
             ->setMockClassName('')
             ->disableOriginalConstructor()

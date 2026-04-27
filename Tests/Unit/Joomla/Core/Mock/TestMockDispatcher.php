@@ -60,8 +60,8 @@ class TestMockDispatcher extends TestCase
         );
 
         // Build the mock object.
-        $mockObject = $test->getMockBuilder('JEventDispatcher')
-            ->setMethods($methods)
+        $mockObject = $test->buildMock('JEventDispatcher')
+            ->onlyMethods($methods)
             ->setConstructorArgs(array())
             ->setMockClassName('')
             ->disableOriginalConstructor()

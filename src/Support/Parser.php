@@ -38,7 +38,7 @@ class Parser
         return new static($content, $options);
     }
 
-    public function prepare(UriList $whiteList, UriList $removeList, callable $fn = null): Parser
+    public function prepare(UriList $whiteList, UriList $removeList, ?callable $fn = null): Parser
     {
         $this->whiteList = $whiteList;
         $this->removeList = $removeList;

@@ -41,8 +41,8 @@ class TestMockLanguage
         );
 
         // Build the mock object.
-        $mockObject = $test->getMockBuilder('JLanguage')
-            ->setMethods($methods)
+        $mockObject = $test->buildMock('JLanguage')
+            ->onlyMethods($methods)
             ->setConstructorArgs(array())
             ->setMockClassName('')
             ->disableOriginalConstructor()

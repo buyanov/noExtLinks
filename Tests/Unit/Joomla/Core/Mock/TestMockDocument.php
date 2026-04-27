@@ -39,8 +39,8 @@ class TestMockDocument
         );
 
         // Create the mock.
-        $mockObject = $test->getMockBuilder('JDocument')
-            ->setMethods($methods)
+        $mockObject = $test->buildMock('JDocument')
+            ->onlyMethods($methods)
             ->setConstructorArgs(array())
             ->setMockClassName('')
             ->disableOriginalConstructor()
