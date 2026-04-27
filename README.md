@@ -17,7 +17,7 @@ Version `2.x` is the active development line for Joomla! 5/6.
 
 ### Требования (Requirements)
 
-* PHP 8.1+;
+* PHP 8.3+;
 * Joomla! 5/6
 
 ### Использование (Usage)
