@@ -175,7 +175,7 @@ test.describe.serial('NoExternalLinks Joomla E2E', () => {
     const html = await fetchArticle(page, article.articleId);
 
     expect(html).toContain('--internal-redirect');
-    expect(html).toContain('url=https://google.com/path');
+    expect(html).toContain('url=https%3A%2F%2Fgoogle.com%2Fpath');
     expect(html).not.toContain('<!--noindex-->');
     expect(html).not.toContain('rel="nofollow"');
   });

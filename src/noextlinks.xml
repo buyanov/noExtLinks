@@ -13,6 +13,7 @@
 		<filename plugin="noextlinks">noextlinks.php</filename>
 		<filename>noextlinks.js</filename>
 		<folder>Support</folder>
+		<folder>services</folder>
 	</files>
 	<languages folder="language">
 		<language tag="en-GB">en-GB/en-GB.plg_system_noextlinks.ini</language>
@@ -25,7 +26,7 @@
 			<fieldset name="basic">
 
 				<field name="noindex" type="radio"
-					   default="1" class="btn-group btn-group-yesno"
+					   default="1"
 					   description="PLG_SYSTEM_NOEXTLINKS_NOINDEX_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_NOINDEX_LABEL"
 				>
@@ -33,7 +34,7 @@
 					<option value="1">JYES</option>
 				</field>
 				<field name="nofollow" type="radio"
-					   default="nofollow" class="btn-group btn-group-yesno"
+					   default="nofollow"
 					   description="PLG_SYSTEM_NOEXTLINKS_NOFOLLOW_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_NOFOLLOW_LABEL"
 				>
@@ -41,7 +42,7 @@
 					<option value="nofollow">JYES</option>
 				</field>
 				<field name="settitle" type="radio"
-					   default="1" class="btn-group btn-group-yesno"
+					   default="1"
 					   description="PLG_SYSTEM_NOEXTLINKS_SETTITLE_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_SETTITLE_LABEL"
 				>
@@ -60,7 +61,6 @@
 						name="replace_anchor"
 						type="radio"
 						default="0"
-						class="btn-group btn-group-yesno"
 						description="PLG_SYSTEM_NOEXTLINKS_REPLACE_ANCHOR_DESC"
 						label="PLG_SYSTEM_NOEXTLINKS_REPLACE_ANCHOR_LABEL"
 				>
@@ -72,7 +72,6 @@
 						name="replace_anchor_host"
 						type="radio"
 						default="0"
-						class="btn-group btn-group-yesno"
 						description="PLG_SYSTEM_NOEXTLINKS_REPLACE_ANCHOR_HOST_DESC"
 						label="PLG_SYSTEM_NOEXTLINKS_REPLACE_ANCHOR_HOST_LABEL"
 						showon="replace_anchor:1"
@@ -85,7 +84,6 @@
 						name="absolutize"
 						type="radio"
 						default="0"
-						class="btn-group btn-group-yesno"
 						description="PLG_SYSTEM_NOEXTLINKS_ABSOLUTIZE_DESC"
 						label="PLG_SYSTEM_NOEXTLINKS_ABSOLUTIZE_LABEL"
 				>
@@ -94,7 +92,7 @@
 				</field>
 
 				<field name="usejs" type="radio"
-					   default="0" class="btn-group btn-group-yesno"
+					   default="0"
 					   description="PLG_SYSTEM_NOEXTLINKS_USEJS_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_USEJS_LABEL"
 				>
@@ -103,12 +101,14 @@
 				</field>
 
 				<field name="excluded_domains"
-					   type="repeatable"
+					   type="subform"
 					   icon="list"
+					   multiple="true"
+					   layout="joomla.form.field.subform.repeatable-table"
 					   description="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_LABEL"
 					   default=''>
-					<fieldset hidden="true" name="excluded_domains_modal" repeat="true">
+					<form>
 						<field name="scheme"
 							   label="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_SCHEME_LABEL"
 							   description="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_SCHEME_DESC"
@@ -121,7 +121,7 @@
 						<field name="host"
 							   label="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_HOST_LABEL"
 							   description="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_HOST_DESC"
-							   require="true"
+							   required="true"
 							   type="text"
 						/>
 						<field name="path"
@@ -129,31 +129,32 @@
 							   description="PLG_SYSTEM_NOEXTLINKS_EXCLUDED_DOMAINS_PATH_DESC"
 							   type="text"
 						/>
-					</fieldset>
+					</form>
 				</field>
 
 				<field name="removed_domains"
-					   type="repeatable"
+					   type="subform"
 					   icon="list"
+					   multiple="true"
+					   layout="joomla.form.field.subform.repeatable-table"
 					   description="PLG_SYSTEM_NOEXTLINKS_REMOVED_DOMAINS_DESC"
 					   label="PLG_SYSTEM_NOEXTLINKS_REMOVED_DOMAINS_LABEL"
 					   default=''>
-					<fieldset hidden="true" name="removed_domains_modal" repeat="true">
+					<form>
 						<field name="host"
 							   label="PLG_SYSTEM_NOEXTLINKS_REMOVED_DOMAINS_HOST_LABEL"
 							   description="PLG_SYSTEM_NOEXTLINKS_REMOVED_DOMAINS_HOST_DESC"
-							   require="true"
+							   required="true"
 							   type="text"
 							   pattern="^(?:[\w\-]+\.)+\w+$"
 						/>
-					</fieldset>
+					</form>
 				</field>
 
 				<field
 						name="use_redirect_page"
 						type="radio"
 						default="0"
-						class="btn-group btn-group-yesno"
 						description="PLG_SYSKS_USE_REDIRECT_PAGE_DESC"
 						label="PLG_SYSTEM_NOEXTLINKS_USE_REDIRECT_PAGE_LABEL"
 				>
@@ -208,33 +209,6 @@
                 />
 			</fieldset>
 
-			<fieldset name="deprecated">
-				<field name="excluded_menu_items"
-                       type="textarea"
-					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_LABEL"
-					   description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_MENU_ITEMS_DESC"
-					   class="inputbox"
-					   rows="2"
-					   cols="30"
-                />
-
-				<field name="excluded_categories"
-                       type="textarea"
-					   label="PLG_SYSTEM_NOEXTLINKS_EXLUDED_CATEGORIES_LABEL"
-					   description="PLG_SYSTEM_NOEXTLINKS_EXLUDED_CATEGORIES_DESC"
-					   class="inputbox"
-					   rows="2"
-					   cols="30"
-                />
-
-				<field name="whitelist" type="textarea"
-					   label="PLG_SYSTEM_NOEXTLINKS_WHITELIST_LABEL"
-                       description="PLG_SYSTEM_NOEXTLINKS_WHITELIST_DESC"
-					   class="inputbox"
-                       rows="3"
-                       cols="30"
-                />
-			</fieldset>
 		</fields>
 	</config>
 	<updateservers>

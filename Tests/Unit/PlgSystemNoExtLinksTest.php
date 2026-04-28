@@ -6,17 +6,13 @@ use Buyanov\NoExtLinks\PlgSystemNoExtLinks;
 use Joomla\Registry\Registry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Unit\Joomla\Core\Mock\TestMockApplication;
-use Tests\Unit\Joomla\Core\Mock\TestMockDispatcher;
 use Tests\Unit\Joomla\TestCase;
 
 class PlgSystemNoExtLinksTest extends TestCase
 {
 
     protected function createPluginWithParams(array $params, array $appConfig = []): PlgSystemNoExtLinks
-
     {
-        $dispatcher = TestMockDispatcher::create($this);
-
         $plugin = array(
             'name'   => 'noextlinks',
             'type'   => 'System',
@@ -26,13 +22,9 @@ class PlgSystemNoExtLinksTest extends TestCase
         $_REQUEST['Itemid'] = 42;
         $_REQUEST['url'] = 'http://saity74.ru';
 
-        $class = new PlgSystemNoExtLinks($dispatcher, $plugin);
-
         $app = TestMockApplication::create($this, $appConfig);
-
-        $reflection = new \ReflectionObject($class);
-        $appProperty = $reflection->getProperty('app');
-        $appProperty->setValue($class, $app);
+        $class = new PlgSystemNoExtLinks($plugin);
+        $class->setApplication($app);
 
         return $class;
     }
@@ -87,10 +79,12 @@ class PlgSystemNoExtLinksTest extends TestCase
 
     public function testOnAfterRenderInAdmin(): void
     {
-        $class = $this->createPluginWithParams([]);
-        $class->getApp()->method('isClient')
+        $app = TestMockApplication::create($this);
+        $app->method('isClient')
             ->with('administrator')
             ->willReturn(true);
+        $class = new PlgSystemNoExtLinks(['params' => new Registry([])]);
+        $class->setApplication($app);
 
         $this->assertTrue($class->onAfterRender());
     }
@@ -110,7 +104,7 @@ class PlgSystemNoExtLinksTest extends TestCase
             'excluded_domains' => '{"scheme":["https"], "host":["google.com"], "path":["/*"]}'
         ]);
 
-        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+        TestMockApplication::mockSetBody('<html><body><a href="#">link</a></body></html>');
 
         $this->assertTrue($class->onAfterRender());
     }
@@ -125,7 +119,7 @@ class PlgSystemNoExtLinksTest extends TestCase
             'excluded_menu_items' => '42,43,44',
         ]);
 
-        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+        TestMockApplication::mockSetBody('<html><body><a href="#">link</a></body></html>');
 
         $this->assertTrue($class->onAfterRender());
     }
@@ -140,7 +134,7 @@ class PlgSystemNoExtLinksTest extends TestCase
             'excluded_menu_items' => '42,43,44',
         ], ['withMenu' => true]);
 
-        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+        TestMockApplication::mockSetBody('<html><body><a href="#">link</a></body></html>');
 
         $this->assertTrue($class->onAfterRender());
     }
@@ -155,7 +149,7 @@ class PlgSystemNoExtLinksTest extends TestCase
             'excluded_menu_items' => '42,43,44',
         ],['withMenu' => true, 'activeItem' => 42]);
 
-        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+        TestMockApplication::mockSetBody('<html><body><a href="#">link</a></body></html>');
 
         $this->assertTrue($class->onAfterRender());
     }
@@ -173,7 +167,7 @@ class PlgSystemNoExtLinksTest extends TestCase
             'usejs' => '1'
         ]);
 
-        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+        TestMockApplication::mockSetBody('<html><body><a href="#">link</a></body></html>');
 
         $this->assertTrue($class->onAfterRender());
     }
@@ -188,7 +182,7 @@ class PlgSystemNoExtLinksTest extends TestCase
             'excluded_categories' => '2,3',
         ]);
 
-        $class->getApp()->setBody('<html><body><a href="#">link</a></body></html>');
+        TestMockApplication::mockSetBody('<html><body><a href="#">link</a></body></html>');
 
         $this->assertTrue($class->onAfterRender());
     }

@@ -17,34 +17,11 @@ ini_set('zend.ze1_compatibility_mode', '0');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+require_once __DIR__ . '/Joomla/CMS/Plugin/CMSPlugin.php';
+require_once __DIR__ . '/Joomla/Event/SubscriberInterface.php';
+require_once __DIR__ . '/Joomla/CMS/Event/Application/BeforeRenderEvent.php';
+require_once __DIR__ . '/Joomla/CMS/Event/Application/AfterRenderEvent.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
-
-abstract class JLoader
-{
-    public static function import($path): bool
-    {
-        return true;
-    }
-}
-
-abstract class JPlugin
-{
-    protected $params;
-
-    public function __construct($subject, $config)
-    {
-        $this->params = $config['params'];
-    }
-
-    /**
-     * Method for tests only
-     * @return mixed
-     */
-    public function getApp()
-    {
-        return $this->app;
-    }
-}
 
 class JApplication
 {

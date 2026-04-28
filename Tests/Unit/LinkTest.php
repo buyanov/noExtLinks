@@ -113,6 +113,21 @@ class LinkTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    public function testEscapesAttributeValues(): void
+    {
+        $this->link->setArgs([
+            'href' => 'https://example.com/?a=1&b="x"',
+            'title' => 'Quote " and apostrophe \'',
+            'class' => 'custom "class"',
+        ]);
+
+        $expected = '<a href="https://example.com/?a=1&amp;b=&quot;x&quot;"'
+            . ' title="Quote &quot; and apostrophe &#039;"'
+            . ' class="custom &quot;class&quot;">saity74</a>';
+
+        $this->assertEquals($expected, (string) $this->link);
+    }
+
     #[DataProvider('providerTestCreateLink')]
     public function testCreate($href, $anchor, $class, $expectedResult): void
     {
