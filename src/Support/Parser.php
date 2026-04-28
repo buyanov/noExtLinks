@@ -7,6 +7,7 @@ use Joomla\Uri\Uri;
 
 class Parser
 {
+    private const OPEN_ANCHOR_PATTERN = '<a';
 
     protected $blocks = [];
 
@@ -54,9 +55,47 @@ class Parser
 
     public function parse(): Parser
     {
-        /* phpcs:ignore */
-        $regex = '/<a(?:\s*?)(?P<args>(?=(?:[^>=]|=")*?\shref="(?=[\w]|[\/\.#])(?P<href>[^"]*)")[^<>]*)>(?P<anchor>.*?)<\/a>/ius';
-        $this->content = preg_replace_callback($regex, [$this, 'replace'], $this->content);
+        $content = $this->content;
+        $offset = 0;
+        $result = '';
+
+        while (($openStart = stripos($content, self::OPEN_ANCHOR_PATTERN, $offset)) !== false) {
+            if (!$this->isAnchorTagStart($content, $openStart)) {
+                $result .= substr($content, $offset, $openStart + 2 - $offset);
+                $offset = $openStart + 2;
+                continue;
+            }
+
+            $openEnd = $this->findTagEnd($content, $openStart + 2);
+
+            if ($openEnd === null) {
+                break;
+            }
+
+            $closeStart = stripos($content, '</a>', $openEnd + 1);
+
+            if ($closeStart === false) {
+                break;
+            }
+
+            $text = substr($content, $openStart, $closeStart + 4 - $openStart);
+            $args = substr($content, $openStart + 2, $openEnd - $openStart - 2);
+            $anchor = substr($content, $openEnd + 1, $closeStart - $openEnd - 1);
+            $attributes = self::parseAttributes($args);
+
+            if (!isset($attributes['href']) || !$this->isSupportedHref($attributes['href'])) {
+                $result .= substr($content, $offset, $closeStart + 4 - $offset);
+                $offset = $closeStart + 4;
+                continue;
+            }
+
+            $result .= substr($content, $offset, $openStart - $offset);
+            $result .= $this->replaceAnchor($text, $attributes['href'], $anchor, $attributes);
+            $offset = $closeStart + 4;
+        }
+
+        $result .= substr($content, $offset);
+        $this->content = $result;
 
         return $this;
     }
@@ -96,22 +135,55 @@ class Parser
         return '<!-- extlinks -->' . array_pop($this->blocks) . '<!-- /extlinks -->';
     }
 
-    /**
-     * Method for replace links
-     *
-     * @param   array  $matches  Array with matched links
-     * @return  mixed|string
-     */
-    protected function replace($matches)
+    private function isAnchorTagStart(string $content, int $position): bool
     {
-        [$text, $pureArgs, $href, $anchor] = $matches;
+        $previous = $content[$position - 1] ?? '';
+        $next = $content[$position + 2] ?? '';
 
+        return $previous !== '<' && ($next === '' || ctype_space($next) || $next === '>');
+    }
+
+    private function findTagEnd(string $content, int $offset): ?int
+    {
+        $quote = null;
+        $length = strlen($content);
+
+        for ($i = $offset; $i < $length; $i++) {
+            $char = $content[$i];
+
+            if ($quote !== null) {
+                if ($char === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+                continue;
+            }
+
+            if ($char === '>') {
+                return $i;
+            }
+        }
+
+        return null;
+    }
+
+    private function isSupportedHref(string $href): bool
+    {
+        return $href !== '' && (preg_match('/^[\w\/\.#]/u', $href) === 1);
+    }
+
+    protected function replaceAnchor(string $text, string $href, string $anchor, array $args)
+    {
         // If anchor for element on same page - ignore it
         if (str_starts_with($href, '#')) {
             return $text;
         }
 
-        $args = static::parseAttributes($pureArgs);
         $uri = new Uri($href);
 
         if ($this->isRelativeUri($uri)) {
@@ -128,8 +200,8 @@ class Parser
             return $text;
         }
 
-        // Filter "tel:", "whatsup://send...", "skype:" etc
-        if ($this->isHttpUri($uri)) {
+        // Filter "tel:", "whatsapp://send...", "skype:" etc.
+        if ($this->shouldSkipUri($uri)) {
             return $text;
         }
 
@@ -216,28 +288,88 @@ class Parser
      */
     public static function parseAttributes($string): array
     {
-        $attr = [];
-        $retarray = [];
+        $attributes = [];
+        $length = strlen($string);
+        $offset = 0;
 
-        // Let's grab all the key/value pairs using a regular expression
-        preg_match_all('/([\w:-]+)[\s]?=[\s]?"([^"]*)"/i', $string, $attr);
+        while ($offset < $length) {
+            while ($offset < $length && ctype_space($string[$offset])) {
+                $offset++;
+            }
 
-        $numPairs = count($attr[1]);
+            if ($offset >= $length) {
+                break;
+            }
 
-        for ($i = 0; $i < $numPairs; $i++) {
-            $retarray[$attr[1][$i]] = $attr[2][$i];
+            $nameStart = $offset;
+
+            while ($offset < $length && preg_match('/[\w:-]/', $string[$offset]) === 1) {
+                $offset++;
+            }
+
+            if ($nameStart === $offset) {
+                $offset++;
+                continue;
+            }
+
+            $name = strtolower(substr($string, $nameStart, $offset - $nameStart));
+
+            while ($offset < $length && ctype_space($string[$offset])) {
+                $offset++;
+            }
+
+            if ($offset >= $length || $string[$offset] !== '=') {
+                $attributes[$name] = $name;
+                continue;
+            }
+
+            $offset++;
+
+            while ($offset < $length && ctype_space($string[$offset])) {
+                $offset++;
+            }
+
+            if ($offset >= $length) {
+                $attributes[$name] = '';
+                break;
+            }
+
+            $quote = $string[$offset];
+
+            if ($quote === '"' || $quote === "'") {
+                $offset++;
+                $valueStart = $offset;
+
+                while ($offset < $length && $string[$offset] !== $quote) {
+                    $offset++;
+                }
+
+                $attributes[$name] = substr($string, $valueStart, $offset - $valueStart);
+
+                if ($offset < $length) {
+                    $offset++;
+                }
+
+                continue;
+            }
+
+            $valueStart = $offset;
+
+            while ($offset < $length && !ctype_space($string[$offset]) && $string[$offset] !== '>') {
+                $offset++;
+            }
+
+            $attributes[$name] = substr($string, $valueStart, $offset - $valueStart);
         }
 
-        return $retarray;
+        return $attributes;
     }
 
-    /**
-     * @param Uri $uri
-     * @return bool
-     */
-    protected function isHttpUri(Uri $uri): bool
+    protected function shouldSkipUri(Uri $uri): bool
     {
-        return ($uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']))
-            || (!$uri->getHost() && !in_array(strtolower($uri->getScheme()), ['http', 'https']));
+        $scheme = strtolower((string) $uri->getScheme());
+
+        return ($uri->getHost() && !in_array($scheme, ['http', 'https'], true))
+            || (!$uri->getHost() && !in_array($scheme, ['http', 'https'], true));
     }
 }
