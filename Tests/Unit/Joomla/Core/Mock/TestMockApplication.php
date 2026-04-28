@@ -44,6 +44,7 @@ class TestMockApplication
             'getDocument',
             'getMenu',
             'getLanguage',
+            'isClient',
             'isAdmin',
             'appendBody',
             'getBody',
@@ -76,6 +77,10 @@ class TestMockApplication
         $mockObject->expects($test->anyInvocation())
             ->method('getDocument')
             ->willReturn($document);
+
+        $mockObject->expects($test->anyInvocation())
+            ->method('isClient')
+            ->willReturn(false);
 
         $mockObject->input = new JInput();
 

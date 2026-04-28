@@ -82,6 +82,10 @@ class JApplication
     {
     }
 
+    public function isClient()
+    {
+    }
+
     public function isAdmin()
     {
     }

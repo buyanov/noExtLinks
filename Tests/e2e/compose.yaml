@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: joomla
+      MYSQL_USER: joomla
+      MYSQL_PASSWORD: joomla
+      MYSQL_RANDOM_ROOT_PASSWORD: "1"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "joomla", "-pjoomla"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  joomla:
+    image: ${JOOMLA_IMAGE:-joomla:5-php8.3-apache}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${JOOMLA_PORT:-8055}:80"
+    environment:
+      JOOMLA_DB_HOST: db
+      JOOMLA_DB_USER: joomla
+      JOOMLA_DB_PASSWORD: joomla
+      JOOMLA_DB_NAME: joomla
+      JOOMLA_SITE_NAME: NoExternalLinks E2E
+      JOOMLA_ADMIN_USER: NoExternalLinks Admin
+      JOOMLA_ADMIN_USERNAME: admin
+      JOOMLA_ADMIN_PASSWORD: admin-password-123
+      JOOMLA_ADMIN_EMAIL: admin@example.test
+    volumes:
+      - ../..:/tests:ro

@@ -106,7 +106,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     public function onAfterRender(): bool
     {
-        if ($this->app->isAdmin()) {
+        if ($this->isAdminClient()) {
             return true;
         }
 
@@ -135,6 +135,15 @@ class PlgSystemNoExtLinks extends \JPlugin
         $this->app->setBody($content);
 
         return true;
+    }
+
+    private function isAdminClient(): bool
+    {
+        if (method_exists($this->app, 'isClient')) {
+            return $this->app->isClient('administrator');
+        }
+
+        return $this->app->isAdmin();
     }
 
     /**
@@ -275,9 +284,9 @@ class PlgSystemNoExtLinks extends \JPlugin
     private function checkArticle(): bool
     {
         $articles = explode(',', $this->params->get('excluded_articles', ''));
-        $article = $this->getCurrentArticle();
+        $articleId = (int) $this->app->input->get('id');
 
-        return (is_object($article) && is_array($articles) && in_array($article->id, $articles, false));
+        return $articleId > 0 && is_array($articles) && in_array($articleId, $articles, false);
     }
 
     /**
@@ -287,9 +296,25 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function getCurrentArticle()
     {
+        $articleId = (int) $this->app->input->get('id');
+
         if (($this->app->input->get('option') !== 'com_content')
-            || ($this->app->input->get('view') !== 'article') || !$this->app->input->get('id')) {
+            || ($this->app->input->get('view') !== 'article') || !$articleId) {
             return null;
+        }
+
+        if (class_exists('\Joomla\CMS\Factory')) {
+            try {
+                $db = \Joomla\CMS\Factory::getDbo();
+                $query = $db->getQuery(true)
+                    ->select($db->quoteName(['id', 'catid']))
+                    ->from($db->quoteName('#__content'))
+                    ->where($db->quoteName('id') . ' = ' . $articleId);
+
+                return $db->setQuery($query)->loadObject() ?: null;
+            } catch (\Throwable $exception) {
+                return null;
+            }
         }
 
         if (!\JLoader::import('models.article', JPATH_COMPONENT_SITE)) {

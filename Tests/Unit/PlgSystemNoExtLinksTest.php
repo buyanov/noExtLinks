@@ -88,7 +88,8 @@ class PlgSystemNoExtLinksTest extends TestCase
     public function testOnAfterRenderInAdmin(): void
     {
         $class = $this->createPluginWithParams([]);
-        $class->getApp()->method('isAdmin')
+        $class->getApp()->method('isClient')
+            ->with('administrator')
             ->willReturn(true);
 
         $this->assertTrue($class->onAfterRender());

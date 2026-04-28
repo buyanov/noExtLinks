@@ -1,0 +1,14 @@
+{
+  "name": "noextlinks-e2e",
+  "private": true,
+  "scripts": {
+    "e2e": "E2E_TARGET=joomla5 playwright test",
+    "e2e:joomla5": "E2E_TARGET=joomla5 playwright test",
+    "e2e:joomla6": "E2E_TARGET=joomla6 playwright test",
+    "e2e:headed": "E2E_TARGET=joomla5 playwright test --headed",
+    "playwright:install": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

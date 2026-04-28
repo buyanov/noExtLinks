@@ -1,4 +1,8 @@
 /.idea
+node_modules/
+playwright-report/
+test-results/
+.playwright-cache/
 # Created by .ignore support plugin (hsz.mobi)
 ### Joomla template
 /.htaccess
@@ -545,3 +549,4 @@ phpunit.phar
 /dist/
 /.composer-cache/
 /.phpunit.cache/
+/Tests/e2e/.artifacts/

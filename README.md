@@ -20,6 +20,28 @@ Version `2.x` is the active development line for Joomla! 5/6.
 * PHP 8.3+;
 * Joomla! 5/6
 
+### Разработка (Development)
+
+```bash
+composer install
+composer test
+composer cs
+composer zip
+```
+
+E2E-тесты поднимают реальную Joomla в Docker и устанавливают собранный zip:
+
+```bash
+composer e2e:joomla5
+composer e2e:joomla6
+```
+
+Для ручной проверки установки через админку:
+
+```bash
+composer e2e:manual:joomla5
+```
+
 ### Использование (Usage)
 
 Как правило после активации плагина все внешние ссылки будут 

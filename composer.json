@@ -23,7 +23,12 @@
     "test": "phpunit --testdox",
     "cs": "phpcs -n --standard=PSR2 --colors src",
     "build": "php tools/build.php build",
-    "zip": "php tools/build.php zip"
+    "zip": "php tools/build.php zip",
+    "e2e": "npm run e2e",
+    "e2e:joomla5": "npm run e2e:joomla5",
+    "e2e:joomla6": "npm run e2e:joomla6",
+    "e2e:manual:joomla5": "php tools/e2e-manual.php joomla5",
+    "e2e:manual:joomla6": "php tools/e2e-manual.php joomla6"
   },
   "autoload-dev": {
     "psr-4": {
