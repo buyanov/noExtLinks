@@ -177,6 +177,10 @@ function seedArticle(scenario, params, introtext) {
   return JSON.parse(output);
 }
 
+function homeMenuItem() {
+  return JSON.parse(containerPhp('Tests/e2e/menu-item.php'));
+}
+
 async function adminLogin(page) {
   await page.goto(`${baseUrl()}/administrator/`);
   await page.locator('input[name="username"]').fill('admin');
@@ -241,8 +245,18 @@ async function openPluginForm(page, extensionId) {
   await expect(page.locator('body')).toContainText(/noextlinks|NoExternalLinks|PLG_/i);
 }
 
-async function fetchArticle(page, articleId) {
-  const response = await page.goto(`${baseUrl()}/index.php?option=com_content&view=article&id=${articleId}`);
+async function fetchArticle(page, articleId, options = {}) {
+  const url = new URL(`${baseUrl()}/index.php`);
+
+  url.searchParams.set('option', 'com_content');
+  url.searchParams.set('view', 'article');
+  url.searchParams.set('id', String(articleId));
+
+  if (options.itemId) {
+    url.searchParams.set('Itemid', String(options.itemId));
+  }
+
+  const response = await page.goto(url.toString());
   expect(response.status()).toBe(200);
 
   return page.content();
@@ -280,6 +294,7 @@ module.exports = {
   pluginState,
   applyParams,
   seedArticle,
+  homeMenuItem,
   installFromAdmin,
   openPluginForm,
   fetchArticle,

@@ -3,6 +3,7 @@ const {
   defaultParams,
   applyParams,
   seedArticle,
+  homeMenuItem,
   installFromAdmin,
   openPluginForm,
   fetchArticle,
@@ -97,17 +98,46 @@ test.describe.serial('NoExternalLinks Joomla E2E', () => {
     expect(html).toContain('>google.com</a>');
   });
 
+  test('absolutizes relative links without treating them as external', async ({ page }) => {
+    const article = seedArticle(
+      'absolutize',
+      defaultParams({ absolutize: '1' }),
+      '<p><a href="/local">local</a> <a href="https://google.com">google</a></p>'
+    );
+
+    const html = await fetchArticle(page, article.articleId);
+
+    expect(html).toContain(`<a href="${new URL('/local', page.url()).origin}/local">local</a>`);
+    expect(html).toContain('<!--noindex--><a href="https://google.com"');
+    expect(html).toContain('class="external-link --set-title"');
+  });
+
+  test('preserves existing link attributes while adding external markers', async ({ page }) => {
+    const article = seedArticle(
+      'preserve-attributes',
+      defaultParams(),
+      '<p><a href="https://google.com" id="source-link" title="Existing title" class="custom primary">google</a></p>'
+    );
+
+    const html = await fetchArticle(page, article.articleId);
+
+    expect(html).toContain('id="source-link"');
+    expect(html).toContain('title="Existing title"');
+    expect(html).toContain('class="custom primary external-link"');
+    expect(html).not.toContain('--set-title');
+  });
+
   test('honors excluded domain masks and legacy whitelist', async ({ page }) => {
     let article = seedArticle(
       'excluded-domain',
-      defaultParams({ excluded_domains: '{"scheme":["https"],"host":["google.com"],"path":["/*"]}' }),
-      '<p><a href="https://google.com/docs/page">google docs</a> <a href="https://example.com">example</a></p>'
+      defaultParams({ excluded_domains: '{"scheme":["https"],"host":["google.com"],"path":["/docs/*"]}' }),
+      '<p><a href="https://google.com/docs/page">google docs</a> <a href="https://google.com/other">google other</a> <a href="https://example.com">example</a></p>'
     );
     let html = await fetchArticle(page, article.articleId);
 
     expect(html).toContain('<a href="https://google.com/docs/page">google docs</a>');
-    expect(html).toContain('href="https://example.com"');
-    expect(html).toContain('external-link');
+    expect(html).toContain('<!--noindex--><a href="https://google.com/other"');
+    expect(html).toContain('<!--noindex--><a href="https://example.com"');
 
     article = seedArticle(
       'legacy-whitelist',
@@ -124,7 +154,7 @@ test.describe.serial('NoExternalLinks Joomla E2E', () => {
     const article = seedArticle(
       'removed-domain',
       defaultParams({ removed_domains: '{"host":["google.com"]}' }),
-      '<p>before <a href="https://google.com">google</a> after <a href="https://example.com">example</a></p>'
+      '<p>before <a href="https://google.com/path">google</a> after <a href="https://example.com">example</a></p>'
     );
 
     const html = await fetchArticle(page, article.articleId);
@@ -132,6 +162,22 @@ test.describe.serial('NoExternalLinks Joomla E2E', () => {
     expect(html).toContain('before  after');
     expect(html).not.toContain('https://google.com');
     expect(html).toContain('https://example.com');
+  });
+
+  test('routes external links through configured redirect page', async ({ page }) => {
+    const menuItem = homeMenuItem();
+    const article = seedArticle(
+      'redirect-page',
+      defaultParams({ use_redirect_page: '1', redirect_page: String(menuItem.id) }),
+      '<p><a href="https://google.com/path">google</a></p>'
+    );
+
+    const html = await fetchArticle(page, article.articleId);
+
+    expect(html).toContain('--internal-redirect');
+    expect(html).toContain('url=https://google.com/path');
+    expect(html).not.toContain('<!--noindex-->');
+    expect(html).not.toContain('rel="nofollow"');
   });
 
   test('skips excluded articles and categories', async ({ page }) => {
@@ -153,6 +199,31 @@ test.describe.serial('NoExternalLinks Joomla E2E', () => {
       '<p><a href="https://google.com">google</a></p>'
     );
     html = await fetchArticle(page, article.articleId);
+
+    expect(html).toContain('<a href="https://google.com">google</a>');
+    expect(html).not.toContain('external-link');
+  });
+
+  test('skips excluded current menu items and legacy menu item ids', async ({ page }) => {
+    const menuItem = homeMenuItem();
+    let article = seedArticle(
+      'excluded-menu',
+      defaultParams({ excluded_menu: [menuItem.id] }),
+      '<p><a href="https://google.com">google</a></p>'
+    );
+
+    let html = await fetchArticle(page, article.articleId, { itemId: menuItem.id });
+
+    expect(html).toContain('<a href="https://google.com">google</a>');
+    expect(html).not.toContain('external-link');
+
+    article = seedArticle(
+      'legacy-excluded-menu',
+      defaultParams({ excluded_menu_items: String(menuItem.id) }),
+      '<p><a href="https://google.com">google</a></p>'
+    );
+
+    html = await fetchArticle(page, article.articleId, { itemId: menuItem.id });
 
     expect(html).toContain('<a href="https://google.com">google</a>');
     expect(html).not.toContain('external-link');
