@@ -31,6 +31,13 @@ repos:
         types_or: [php, xml]
         pass_filenames: false
 
+      - id: composer-analyze
+        name: Composer static analysis
+        entry: composer analyze
+        language: system
+        types_or: [php, xml]
+        pass_filenames: false
+
       - id: composer-test
         name: Composer unit tests
         entry: composer test
