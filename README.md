@@ -25,6 +25,7 @@ Version `2.x` is the active development line for Joomla! 5/6.
 ```bash
 composer install
 composer test
+composer analyze
 composer cs
 composer zip
 ```

@@ -87,7 +87,7 @@ class UriList implements \Countable
     /**
      * @param string $scheme
      * @param string $host
-     * @param string $port
+     * @param int|string|null $port
      * @param string|null $path
      * @param string|null $query
      * @param string|null $fragment
@@ -95,15 +95,15 @@ class UriList implements \Countable
     public function pushByParts(
         string $scheme,
         string $host,
-        string $port,
+        $port,
         ?string $path = null,
         ?string $query = null,
         ?string $fragment = null
     ): void {
         $uri = new Uri();
-        $uri->setScheme($scheme ?? '');
-        $uri->setHost($host ?? '');
-        $uri->setPort($port ?? '');
+        $uri->setScheme($scheme);
+        $uri->setHost($host);
+        $uri->setPort($port === '' || $port === null ? null : (int) $port);
         $uri->setPath($path ?? '');
         $uri->setQuery($query ?? '');
         $uri->setFragment($fragment ?? '');

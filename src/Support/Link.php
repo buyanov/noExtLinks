@@ -3,10 +3,10 @@
 namespace Buyanov\NoExtLinks\Support;
 
 /**
- * @property string href
- * @property string target
- * @property string rel
- * @property string title
+ * @property string $href
+ * @property string $target
+ * @property string $rel
+ * @property string $title
  */
 
 class Link
@@ -44,7 +44,7 @@ class Link
 
     public static function create(): Link
     {
-        return new static($href = '', $anchor = '');
+        return new self();
     }
 
     public function __set($name, $value)

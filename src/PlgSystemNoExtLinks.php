@@ -52,7 +52,7 @@ class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
     /**
      * List of excluded domains
      *
-     * @var $excludedDomains UriList
+     * @var UriList
      */
 
     protected $excludedDomains;
@@ -60,7 +60,7 @@ class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
     /**
      * List of domains for remove
      *
-     * @var $removedDomains UriList
+     * @var UriList
      */
     protected $removedDomains;
 
@@ -159,13 +159,7 @@ class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
 
     private function isAdminClient(): bool
     {
-        $app = $this->getApplication();
-
-        if (method_exists($app, 'isClient')) {
-            return $app->isClient('administrator');
-        }
-
-        return $app->isAdmin();
+        return $this->getApplication()->isClient('administrator');
     }
 
     /**
@@ -283,10 +277,8 @@ class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
         if (!is_array($whiteList)) {
             $whiteList = array_unique(explode("\n", $whiteList));
 
-            if (!empty($whiteList)) {
-                foreach ($whiteList as $url) {
-                    $this->excludedDomains->push($url);
-                }
+            foreach ($whiteList as $url) {
+                $this->excludedDomains->push($url);
             }
         }
     }
@@ -332,7 +324,7 @@ class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
         $articles = explode(',', $this->params->get('excluded_articles', ''));
         $articleId = (int) $this->getApplication()->input->get('id');
 
-        return $articleId > 0 && is_array($articles) && in_array($articleId, $articles, false);
+        return $articleId > 0 && in_array($articleId, $articles, false);
     }
 
     /**
