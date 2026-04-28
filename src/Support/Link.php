@@ -101,31 +101,34 @@ class Link
         return implode(' ', $this->class);
     }
 
-    protected function filterArgs(): void
+    protected function splitArgsAndClasses(): array
     {
+        $args = $this->args;
+        $classes = $this->class;
+
         if (array_key_exists('class', $this->args)) {
-            $this->class = array_merge(explode(' ', $this->args['class']), $this->class);
-            unset($this->args['class']);
+            $classes = array_merge(explode(' ', (string) $this->args['class']), $classes);
+            unset($args['class']);
         }
 
-        $this->args = array_filter($this->args);
+        return [array_filter($args), array_filter($classes)];
     }
 
     protected function getProps(bool $data = false): string
     {
         $prefix = $data ? '' : 'data-';
-        $this->filterArgs();
+        [$args, $classes] = $this->splitArgsAndClasses();
 
         $props = [];
 
-        foreach ($this->args as $prop => $value) {
+        foreach ($args as $prop => $value) {
             if (null !== $value) {
                 $props[] = "{$prefix}{$prop}=\"" . $this->escape((string) $value) . '"';
             }
         }
 
-        if (!empty($this->class)) {
-            $props[] = 'class="' . $this->escape($this->getClassProp()) . '"';
+        if (!empty($classes)) {
+            $props[] = 'class="' . $this->escape(implode(' ', $classes)) . '"';
         }
 
         return implode(' ', $props);

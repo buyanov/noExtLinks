@@ -23,6 +23,7 @@
   "scripts": {
     "test": "phpunit --testdox",
     "analyze": "phpstan analyse --no-progress --debug",
+    "bench:parser": "php tools/bench-parser.php",
     "cs": "phpcs -n --standard=PSR2 --colors src",
     "build": "php tools/build.php build",
     "zip": "php tools/build.php zip",

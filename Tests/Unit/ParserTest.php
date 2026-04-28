@@ -180,7 +180,57 @@ class ParserTest extends TestCase
                 ['usejs' => '1'],
                 'Test <!--noindex--><span data-href="https://google.com" data-target="_blank" data-title="google" data-rel="nofollow" class="my-custom-class external-link --set-title js-modify">google</span><!--/noindex--> with text'
             ],
+            "External link with single quoted href" => [
+                "Test <a href='https://google.com' class='my-custom-class'>google</a> with text",
+                [],
+                'Test <!--noindex--><a href="https://google.com" target="_blank" title="google" rel="nofollow" class="my-custom-class external-link --set-title">google</a><!--/noindex--> with text'
+            ],
+            "External link with unquoted href" => [
+                'Test <a href=https://google.com class=my-custom-class>google</a> with text',
+                [],
+                'Test <!--noindex--><a href="https://google.com" target="_blank" title="google" rel="nofollow" class="my-custom-class external-link --set-title">google</a><!--/noindex--> with text'
+            ],
+            "External link with uppercase tag and attributes" => [
+                'Test <A HREF="https://google.com" CLASS="my-custom-class">google</A> with text',
+                [],
+                'Test <!--noindex--><a href="https://google.com" target="_blank" title="google" rel="nofollow" class="my-custom-class external-link --set-title">google</a><!--/noindex--> with text'
+            ],
+            "External link with boolean attribute" => [
+                'Test <a href="https://google.com" download>google</a> with text',
+                [],
+                'Test <!--noindex--><a href="https://google.com" download="download" target="_blank" title="google" rel="nofollow" class="external-link --set-title">google</a><!--/noindex--> with text'
+            ],
+            "External link with closing bracket inside attribute" => [
+                'Test <a href="https://google.com" title="a > b">google</a> with text',
+                [],
+                'Test <!--noindex--><a href="https://google.com" title="a &gt; b" target="_blank" rel="nofollow" class="external-link">google</a><!--/noindex--> with text'
+            ],
+            "Malformed open anchor is preserved" => [
+                'Test <a href="https://google.com">google with text',
+                [],
+                'Test <a href="https://google.com">google with text'
+            ],
+            "Protocol-relative URL is preserved by default" => [
+                'Test <a href="//google.com/path">google</a> with text',
+                [],
+                'Test <a href="//google.com/path">google</a> with text'
+            ],
         ];
+    }
+
+    public function testParseAttributesSupportsModernHtmlForms(): void
+    {
+        $attributes = Parser::parseAttributes(' HREF=https://example.com disabled data-id=\'42\' title="a > b"');
+
+        $this->assertSame(
+            [
+                'href' => 'https://example.com',
+                'disabled' => 'disabled',
+                'data-id' => '42',
+                'title' => 'a > b',
+            ],
+            $attributes
+        );
     }
 
     public function testParserWithLists(): void

@@ -143,17 +143,17 @@ class UriList implements \Countable
         $regex = [];
 
         if ($fromList->getScheme() === '*') {
-            $regex[] = 'http[s]?\://';
+            $regex[] = 'https?\://';
         } else {
-            $regex[] = $fromList->getScheme() . '\://';
+            $regex[] = preg_quote($fromList->getScheme(), '~') . '\://';
         }
 
         if ($host = $fromList->toString(['host', 'port'])) {
-            $regex[] = str_replace('*', '[\w\-]+', $host);
+            $regex[] = $this->maskToRegex($host, '[\w\-]+');
         }
 
         if ($path = $fromList->getPath()) {
-            $regex[] = str_replace('/*', '(\/[\w\-\~\:\.\/]*|)', $path);
+            $regex[] = $this->pathMaskToRegex($path);
         }
 
         $rx = '~^' . implode('', $regex) . '$~iU';
@@ -164,5 +164,21 @@ class UriList implements \Countable
         }
 
         return false;
+    }
+
+    private function maskToRegex(string $mask, string $wildcard): string
+    {
+        return str_replace('\*', $wildcard, preg_quote($mask, '~'));
+    }
+
+    private function pathMaskToRegex(string $path): string
+    {
+        if (str_ends_with($path, '/*')) {
+            $prefix = substr($path, 0, -2);
+
+            return preg_quote($prefix, '~') . '(?:\/[\w\-\~\:\.\/]*)?';
+        }
+
+        return $this->maskToRegex($path, '[\w\-\~\:\.\/]*');
     }
 }
