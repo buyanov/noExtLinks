@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: local
+    hooks:
+      - id: php-lint
+        name: PHP syntax check
+        entry: php -l
+        language: system
+        types: [php]
+
+      - id: composer-validate
+        name: Composer validate
+        entry: composer validate --strict --no-check-publish
+        language: system
+        files: ^composer\.(json|lock)$
+        pass_filenames: false
+
+      - id: composer-cs
+        name: Composer code style
+        entry: composer cs
+        language: system
+        types_or: [php, xml]
+        pass_filenames: false
+
+      - id: composer-test
+        name: Composer unit tests
+        entry: composer test
+        language: system
+        types_or: [php, xml]
+        pass_filenames: false
