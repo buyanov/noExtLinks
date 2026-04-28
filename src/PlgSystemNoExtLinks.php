@@ -14,30 +14,41 @@ defined('_JEXEC') or die;
 
 use Buyanov\NoExtLinks\Support\Parser;
 use Buyanov\NoExtLinks\Support\UriList;
-use Joomla\Utilities\ArrayHelper;
-use Joomla\String\StringHelper;
+use Joomla\CMS\Event\Application\AfterRenderEvent;
+use Joomla\CMS\Event\Application\BeforeRenderEvent;
+use Joomla\CMS\Language\Multilanguage;
+use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri as CmsUri;
 use Joomla\Uri\Uri;
+use Joomla\Event\SubscriberInterface;
 use function Buyanov\NoExtLinks\Support\base;
 
-if (!defined('TESTS_ENV') && !class_exists(PlgSystemNoExtLinks::class)) {
-    \JLoader::registerAlias('PlgSystemNoExtLinks', 'Buyanov\NoExtLinks\PlgSystemNoExtLinks');
-    require_once __DIR__  . '/Support/helpers.php';
-    \JLoader::registerNamespace('Buyanov\\NoExtLinks\\Support', __DIR__ . '/Support', false, false, 'psr4');
+if (!defined('TESTS_ENV')) {
+    require_once __DIR__ . '/Support/helpers.php';
+
+    spl_autoload_register(static function (string $class): void {
+        $prefix = __NAMESPACE__ . '\\Support\\';
+
+        if (strpos($class, $prefix) !== 0) {
+            return;
+        }
+
+        $relativeClass = substr($class, strlen($prefix));
+        $path = __DIR__ . '/Support/' . str_replace('\\', '/', $relativeClass) . '.php';
+
+        if (is_file($path)) {
+            require_once $path;
+        }
+    });
 }
 
 /**
  * Class PlgSystemNoExtLinks
  *
  */
-class PlgSystemNoExtLinks extends \JPlugin
+class PlgSystemNoExtLinks extends CMSPlugin implements SubscriberInterface
 {
-    /**
-     * Object of Joomla! application class
-     *
-     * @var $app \JApplicationCms
-     */
-    protected $app;
-
     /**
      * List of excluded domains
      *
@@ -53,18 +64,25 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     protected $removedDomains;
 
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            'onBeforeRender' => 'onBeforeRender',
+            'onAfterRender' => 'onAfterRender',
+        ];
+    }
+
     /**
      * Constructor
      *
-     * @param   object  $subject  The object to observe
      * @param   array   $config   An optional associative array of configuration settings.
      *                            Recognized key values include 'name', 'group', 'params', 'language'
      *                            (this list is not meant to be comprehensive).
      *
      */
-    public function __construct($subject, array $config = array())
+    public function __construct(array $config = array())
     {
-        parent::__construct($subject, $config);
+        parent::__construct($config);
 
         $this->excludedDomains = new UriList();
         $this->excludeSiteDomain();
@@ -80,19 +98,20 @@ class PlgSystemNoExtLinks extends \JPlugin
      *
      * @return boolean
      */
-    public function onBeforeRender(): bool
+    public function onBeforeRender(?BeforeRenderEvent $event = null): bool
     {
         if (!$this->params->get('use_redirect_page', false)) {
             return true;
         }
 
-        $currentItemId      = (int) $this->app->input->get('Itemid');
+        $app                = $this->getApplication();
+        $currentItemId      = (int) $app->input->get('Itemid');
         $redirectItemId     = (int) $this->params->get('redirect_page');
-        $redirectUrl        = $this->app->input->get('url', null, 'raw');
+        $redirectUrl        = $app->input->get('url', null, 'raw');
         $redirectTimeout    = (int) $this->params->get('redirect_timeout', 5);
 
         if ($currentItemId && $redirectItemId && $currentItemId === $redirectItemId && $redirectUrl) {
-            $doc = $this->app->getDocument();
+            $doc = $app->getDocument();
             $doc->setMetaData('refresh', $redirectTimeout . '; ' . rawurldecode($redirectUrl), 'http-equiv');
         }
 
@@ -104,15 +123,16 @@ class PlgSystemNoExtLinks extends \JPlugin
      *
      * @return boolean
      */
-    public function onAfterRender(): bool
+    public function onAfterRender(?AfterRenderEvent $event = null): bool
     {
         if ($this->isAdminClient()) {
             return true;
         }
 
-        $content = $this->app->getBody();
+        $app = $this->getApplication();
+        $content = $app->getBody();
 
-        if (StringHelper::strpos($content, '</a>') === false) {
+        if (strpos($content, '</a>') === false) {
             return true;
         }
 
@@ -132,18 +152,20 @@ class PlgSystemNoExtLinks extends \JPlugin
             $content = preg_replace('/<\/body>/i', $jqueryScript, $content);
         }
 
-        $this->app->setBody($content);
+        $app->setBody($content);
 
         return true;
     }
 
     private function isAdminClient(): bool
     {
-        if (method_exists($this->app, 'isClient')) {
-            return $this->app->isClient('administrator');
+        $app = $this->getApplication();
+
+        if (method_exists($app, 'isClient')) {
+            return $app->isClient('administrator');
         }
 
-        return $this->app->isAdmin();
+        return $app->isAdmin();
     }
 
     /**
@@ -153,11 +175,8 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function getExcludedCategories(): array
     {
-        $categories = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_categories', '')));
-        $categories = array_merge(
-            $categories,
-            ArrayHelper::toInteger($this->params->get('excluded_category_list', array()))
-        );
+        $categories = $this->toIntegerList($this->params->get('excluded_categories', ''));
+        $categories = array_merge($categories, $this->toIntegerList($this->params->get('excluded_category_list', [])));
 
         return $categories;
     }
@@ -169,10 +188,35 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function getExcludedMenuItems(): array
     {
-        $items = ArrayHelper::toInteger(explode(',', $this->params->get('excluded_menu_items', '')), []);
-        $items = array_merge($items, ArrayHelper::toInteger($this->params->get('excluded_menu', [])));
+        $items = $this->toIntegerList($this->params->get('excluded_menu_items', ''));
+        $items = array_merge($items, $this->toIntegerList($this->params->get('excluded_menu', [])));
 
         return $items;
+    }
+
+    private function toIntegerList($value): array
+    {
+        if ($value instanceof \Joomla\Registry\Registry) {
+            $value = $value->toArray();
+        }
+
+        if (is_object($value)) {
+            $value = (array) $value;
+        }
+
+        if (is_string($value)) {
+            $value = explode(',', $value);
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $value = array_filter($value, static function ($item): bool {
+            return trim((string) $item) !== '';
+        });
+
+        return array_values(array_map('intval', $value));
     }
 
     /**
@@ -182,7 +226,7 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function checkMenuItem(): bool
     {
-        $menu = $this->app->getMenu();
+        $menu = $this->getApplication()->getMenu();
         if (!$menu) {
             return false;
         }
@@ -206,9 +250,10 @@ class PlgSystemNoExtLinks extends \JPlugin
     {
         $result = false;
         $categories = $this->getExcludedCategories();
-        $extension = $this->app->input->request->get('option');
-        $view = $this->app->input->request->get('view');
-        $id = $this->app->input->request->get('id');
+        $app = $this->getApplication();
+        $extension = $app->input->request->get('option');
+        $view = $app->input->request->get('view');
+        $id = $app->input->request->get('id');
 
         if (!empty($categories) && $extension === 'com_content') {
             if (($view === 'blog' || $view === 'category') && in_array($id, $categories, false)) {
@@ -253,21 +298,22 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function createExcludedDomainsList(): void
     {
-        $exDomains = json_decode((string) $this->params->get('excluded_domains', ''), true);
+        $exDomains = $this->normaliseSubformRows(
+            $this->params->get('excluded_domains', ''),
+            ['scheme', 'host', 'path']
+        );
 
-        if (!empty($exDomains) && is_array($exDomains)) {
+        if (!empty($exDomains)) {
             $exUris = array_map(
-                static function ($scheme, $host, $path) {
+                static function (array $domain) {
                     $uri = new Uri();
-                    $uri->setScheme($scheme ?: '*');
-                    $uri->setHost($host);
-                    $uri->setPath($path ?: '/*');
+                    $uri->setScheme($domain['scheme'] ?: '*');
+                    $uri->setHost($domain['host']);
+                    $uri->setPath($domain['path'] ?: '/*');
 
                     return $uri;
                 },
-                $exDomains['scheme'],
-                $exDomains['host'],
-                $exDomains['path']
+                $exDomains
             );
 
             $list = new UriList();
@@ -284,7 +330,7 @@ class PlgSystemNoExtLinks extends \JPlugin
     private function checkArticle(): bool
     {
         $articles = explode(',', $this->params->get('excluded_articles', ''));
-        $articleId = (int) $this->app->input->get('id');
+        $articleId = (int) $this->getApplication()->input->get('id');
 
         return $articleId > 0 && is_array($articles) && in_array($articleId, $articles, false);
     }
@@ -296,35 +342,29 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function getCurrentArticle()
     {
-        $articleId = (int) $this->app->input->get('id');
+        $app = $this->getApplication();
+        $articleId = (int) $app->input->get('id');
 
-        if (($this->app->input->get('option') !== 'com_content')
-            || ($this->app->input->get('view') !== 'article') || !$articleId) {
+        if (($app->input->get('option') !== 'com_content')
+            || ($app->input->get('view') !== 'article') || !$articleId) {
             return null;
         }
 
-        if (class_exists('\Joomla\CMS\Factory')) {
-            try {
-                $db = \Joomla\CMS\Factory::getDbo();
-                $query = $db->getQuery(true)
-                    ->select($db->quoteName(['id', 'catid']))
-                    ->from($db->quoteName('#__content'))
-                    ->where($db->quoteName('id') . ' = ' . $articleId);
-
-                return $db->setQuery($query)->loadObject() ?: null;
-            } catch (\Throwable $exception) {
-                return null;
-            }
-        }
-
-        if (!\JLoader::import('models.article', JPATH_COMPONENT_SITE)) {
+        if (!class_exists('\Joomla\CMS\Factory')) {
             return null;
         }
 
-        $articleModel = new \ContentModelArticle();
-        $currentArticle = $articleModel->getItem();
+        try {
+            $db = \Joomla\CMS\Factory::getDbo();
+            $query = $db->getQuery(true)
+                ->select($db->quoteName(['id', 'catid']))
+                ->from($db->quoteName('#__content'))
+                ->where($db->quoteName('id') . ' = ' . $articleId);
 
-        return $currentArticle ?: null;
+            return $db->setQuery($query)->loadObject() ?: null;
+        } catch (\Throwable $exception) {
+            return null;
+        }
     }
 
     /**
@@ -334,23 +374,120 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     private function createRemoveList(): void
     {
-        $rmDomains = json_decode((string) $this->params->get('removed_domains', ''), true);
+        $rmDomains = $this->normaliseSubformRows(
+            $this->params->get('removed_domains', ''),
+            ['host']
+        );
 
-        if ($rmDomains) {
+        if (!empty($rmDomains)) {
             $rmUris = array_map(
-                static function ($host) {
+                static function (array $domain) {
                     $uri = new Uri();
                     $uri->setScheme('*');
-                    $uri->setHost($host);
+                    $uri->setHost($domain['host']);
                     $uri->setPath('/*');
 
                     return $uri;
                 },
-                $rmDomains['host']
+                $rmDomains
             );
 
             $this->removedDomains->fromArray($rmUris);
         }
+    }
+
+    private function normaliseSubformRows($value, array $fields): array
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : [];
+        }
+
+        if ($value instanceof \Joomla\Registry\Registry) {
+            $value = $value->toArray();
+        }
+
+        if (is_object($value)) {
+            $value = (array) $value;
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        if ($this->hasColumnArrays($value, $fields)) {
+            return $this->normaliseColumnRows($value, $fields);
+        }
+
+        return $this->normaliseObjectRows($value, $fields);
+    }
+
+    private function hasColumnArrays(array $value, array $fields): bool
+    {
+        foreach ($fields as $field) {
+            if (isset($value[$field]) && is_array($value[$field])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function normaliseColumnRows(array $value, array $fields): array
+    {
+        $rowCount = 0;
+
+        foreach ($fields as $field) {
+            $rowCount = max($rowCount, count($value[$field] ?? []));
+        }
+
+        $rows = [];
+
+        for ($i = 0; $i < $rowCount; $i++) {
+            $row = [];
+
+            foreach ($fields as $field) {
+                $row[$field] = trim((string) ($value[$field][$i] ?? ''));
+            }
+
+            if ($this->hasRequiredHost($row)) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
+    }
+
+    private function normaliseObjectRows(array $value, array $fields): array
+    {
+        $rows = [];
+
+        foreach ($value as $item) {
+            if (is_object($item)) {
+                $item = (array) $item;
+            }
+
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $row = [];
+
+            foreach ($fields as $field) {
+                $row[$field] = trim((string) ($item[$field] ?? ''));
+            }
+
+            if ($this->hasRequiredHost($row)) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
+    }
+
+    private function hasRequiredHost(array $row): bool
+    {
+        return !isset($row['host']) || $row['host'] !== '';
     }
 
     /**
@@ -363,17 +500,20 @@ class PlgSystemNoExtLinks extends \JPlugin
      */
     public function getRedirectUri($href)
     {
-        $base  = $this->params->get('absolutize') ? rtrim(\JUri::base(), '/') : '';
-        $item  = $this->app->getMenu()->getItem($this->params->get('redirect_page'));
+        $base  = $this->params->get('absolutize') ? rtrim(CmsUri::base(), '/') : '';
+        $item  = $this->getApplication()->getMenu()->getItem($this->params->get('redirect_page'));
 
         if ($href && $item) {
-            $lang = '';
+            $query = [
+                'Itemid' => (int) $item->id,
+                'url' => rawurlencode($href),
+            ];
 
-            if ($item->language !== '*' && \JLanguageMultilang::isEnabled()) {
-                $lang = '&lang=' . $item->language;
+            if ($item->language !== '*' && Multilanguage::isEnabled()) {
+                $query['lang'] = $item->language;
             }
 
-            return $base . \JRoute::_('index.php?Itemid=' . $item->id . $lang . '&url=' . $href, true);
+            return $base . Route::_('index.php?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986), true);
         }
 
         return $href;

@@ -79,6 +79,7 @@ function buildPackage(string $root, string $package): void
     copyPath($root . '/src/noextlinks.js', $package . '/noextlinks.js');
     copyPath($root . '/language', $package . '/language');
     copyPath($root . '/src/Support', $package . '/Support');
+    copyPath($root . '/src/services', $package . '/services');
 }
 
 function zipPackage(string $package, string $zipPath): void

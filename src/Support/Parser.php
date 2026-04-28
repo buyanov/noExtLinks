@@ -3,7 +3,6 @@
 namespace Buyanov\NoExtLinks\Support;
 
 use Joomla\Registry\Registry;
-use Joomla\String\StringHelper;
 use Joomla\Uri\Uri;
 
 class Parser
@@ -108,7 +107,7 @@ class Parser
         [$text, $pureArgs, $href, $anchor] = $matches;
 
         // If anchor for element on same page - ignore it
-        if (StringHelper::strpos($href, '#') === 0) {
+        if (str_starts_with($href, '#')) {
             return $text;
         }
 
@@ -117,7 +116,7 @@ class Parser
 
         if ($this->isRelativeUri($uri)) {
             if ($this->options->get('absolutize')) {
-                $newHref = base() . (StringHelper::strpos($href, '/') === 0
+                $newHref = base() . (str_starts_with($href, '/')
                     ? ltrim($href, '/')
                     : $href);
                 $link = Link::create()->setAnchor($anchor)->setArgs($args);

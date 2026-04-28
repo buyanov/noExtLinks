@@ -120,15 +120,20 @@ class Link
 
         foreach ($this->args as $prop => $value) {
             if (null !== $value) {
-                $props[] = "{$prefix}{$prop}=\"$value\"";
+                $props[] = "{$prefix}{$prop}=\"" . $this->escape((string) $value) . '"';
             }
         }
 
         if (!empty($this->class)) {
-            $props[] = "class=\"{$this->getClassProp()}\"";
+            $props[] = 'class="' . $this->escape($this->getClassProp()) . '"';
         }
 
         return implode(' ', $props);
+    }
+
+    private function escape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     public function setTag($tag): void
