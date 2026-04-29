@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ github.event_name == 'pull_request' && fromJSON('["joomla5"]') || fromJSON('["joomla5","joomla6"]') }}
+        target: [joomla5, joomla6]
 
     steps:
       - uses: actions/checkout@v4

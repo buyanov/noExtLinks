@@ -257,7 +257,17 @@ async function fetchArticle(page, articleId, options = {}) {
   }
 
   const response = await page.goto(url.toString());
-  expect(response.status()).toBe(200);
+  const status = response ? response.status() : 0;
+
+  if (status !== 200) {
+    const body = await page.content().catch((error) => `Unable to read page content: ${error.message}`);
+
+    throw new Error(
+      `Unexpected article response status for ${url.toString()}: expected 200, got ${status}\n`
+      + `--- response body ---\n${body.slice(0, 4000)}\n`
+      + collectDiagnostics()
+    );
+  }
 
   return page.content();
 }
